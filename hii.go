@@ -61,10 +61,6 @@ func isChannelOp(o string) bool {
 		o == "TOPIC" || o == "NAMES" || o == "LIST")
 }
 
-func isUser(s *girc.Source) bool {
-	return s != nil && (s.Ident != "" && s.Host != "")
-}
-
 func normalize(name string) string {
 	return name // TODO
 }
@@ -86,10 +82,14 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 }
 
 func handleMsg(client *girc.Client, event girc.Event) {
+	if event.Source == nil {
+		return
+	}
+
 	dir := ircPath
 	if isChannelOp(event.Command) && len(event.Params) >= 1 {
 		dir = filepath.Join(dir, normalize(event.Params[0]))
-	} else if isUser(event.Source) {
+	} else if event.Source.Ident != "" && event.Source.Host != "" {
 		dir = filepath.Join(dir, normalize(event.Source.Name))
 	}
 
