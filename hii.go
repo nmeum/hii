@@ -82,7 +82,7 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 		return err
 	}
 
-	return file.Close()
+	return nil
 }
 
 func handleMsg(client *girc.Client, event girc.Event) {
