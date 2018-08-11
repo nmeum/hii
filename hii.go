@@ -54,13 +54,6 @@ func parseFlags() {
 	flag.Parse()
 }
 
-func isChannelOp(o string) bool {
-	// TODO: Use constants
-	return (o == girc.JOIN || o == girc.PART ||
-		o == girc.MODE || o == girc.TOPIC ||
-		o == girc.NAMES || o == girc.LIST || o == girc.PRIVMSG)
-}
-
 func normalize(name string) string {
 	return name // TODO
 }
@@ -87,9 +80,9 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	}
 
 	dir := ircPath
-	if isChannelOp(event.Command) && len(event.Params) >= 1 {
+	if event.IsFromChannel() {
 		dir = filepath.Join(dir, normalize(event.Params[0]))
-	} else if event.Source.Ident != "" && event.Source.Host != "" {
+	} else if event.IsFromUser() {
 		dir = filepath.Join(dir, normalize(event.Source.Name))
 	}
 
