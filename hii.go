@@ -56,8 +56,9 @@ func parseFlags() {
 
 func isChannelOp(o string) bool {
 	// TODO: Use constants
-	return (o == "JOIN" || o == "PART" || o == "MODE" ||
-		o == "TOPIC" || o == "NAMES" || o == "LIST" || o == "PRIVMSG")
+	return (o == girc.JOIN || o == girc.PART ||
+		o == girc.MODE || o == girc.TOPIC ||
+		o == girc.NAMES || o == girc.LIST || o == girc.PRIVMSG)
 }
 
 func normalize(name string) string {
