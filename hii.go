@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
+	"unicode"
 
 	"github.com/lrstanley/girc"
 )
@@ -54,8 +56,25 @@ func parseFlags() {
 	flag.Parse()
 }
 
+// Briefly modeled after the channel_normalize_path ii function.
 func normalize(name string) string {
-	return name // TODO
+	mfunc := func(r rune) rune {
+		switch {
+		case r == '.' || r == '#' || r == '&' ||
+			r == '+' || r == '!' || r == '-':
+			return r
+		case r >= '0' && r <= '9':
+			return r
+		case r >= 'a' && r <= 'z':
+			return r
+		case r >= 'A' && r <= 'Z':
+			return unicode.ToLower(r)
+		default:
+			return -1
+		}
+	}
+
+	return strings.Map(mfunc, name)
 }
 
 // Like ioutil.Write but doesn't truncate and appends instead.
