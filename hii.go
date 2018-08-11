@@ -54,11 +54,10 @@ func parseFlags() {
 	flag.Parse()
 }
 
-// See: RFC 1459, Section 4.2 (excluding List and Invite).
-// All of these have the channel name as the first parameter (if any).
 func isChannelOp(o string) bool {
+	// TODO: Use constants
 	return (o == "JOIN" || o == "PART" || o == "MODE" ||
-		o == "TOPIC" || o == "NAMES" || o == "LIST")
+		o == "TOPIC" || o == "NAMES" || o == "LIST" || o == "PRIVMSG")
 }
 
 func normalize(name string) string {
