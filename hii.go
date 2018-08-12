@@ -253,15 +253,17 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	if event.IsFromChannel() || isChannelCmd(&event) {
 		dir = filepath.Join(dir, normalize(event.Params[0]))
 	} else if event.IsFromUser() {
-		dir = filepath.Join(dir, normalize(event.Source.Name))
+		name := event.Source.Name
+		dir = filepath.Join(dir, normalize(name))
+
+		// createChannel only creates a channel if it doesn't exist.
+		createChannel(client, name)
 	}
 
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// TODO: create channel on private message from user
 
 	outfp := filepath.Join(dir, outfn)
 	err = appendFile(outfp, append(event.Bytes(), byte('\n')), 0600)
