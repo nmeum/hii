@@ -290,6 +290,8 @@ func addHandlers(client *girc.Client) {
 
 func main() {
 	channels = make(map[string]string)
+
+	// TODO: make logger write to stderr
 	log.SetFlags(log.Lshortfile)
 
 	flag.Usage = usage
