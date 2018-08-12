@@ -30,6 +30,7 @@ const (
 var channels = make(map[string]string)
 
 var (
+	clientKey  string
 	clientCert string
 	certs      string
 	name       string
@@ -73,7 +74,8 @@ func parseFlags() {
 	// Flags are declared in this function instead of declaring them
 	// globally directly in order to properly utilize the os/user package.
 
-	flag.StringVar(&clientCert, "a", "", "client certificates")
+	flag.StringVar(&clientKey, "k", "", "key for certFP")
+	flag.StringVar(&clientCert, "c", "", "cert for certFP")
 	flag.StringVar(&certs, "r", "", "root certificates")
 	flag.StringVar(&name, "f", user.Name, "real name")
 	flag.StringVar(&prefix, "i", filepath.Join(user.HomeDir, "irc"), "directory path")
@@ -82,7 +84,10 @@ func parseFlags() {
 	flag.StringVar(&server, "s", "irc.freenode.net", "IRC server")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 
-	if (clientCert != "" || certs != "") && !useTLS {
+	if (clientKey == "" && clientCert != "") || (clientKey != "" && clientCert == "") {
+		log.Fatal("For using certFP a certificate and key need to be provided")
+	}
+	if (clientKey != "" || clientCert != "" || certs != "") && !useTLS {
 		log.Fatal("Certificates given but TLS wasn't enabled")
 	}
 
@@ -103,6 +108,14 @@ func getTLSconfig() (*tls.Config, error) {
 		}
 
 		config.RootCAs = pool
+	}
+
+	if clientCert != "" && clientKey != "" {
+		cert, err := tls.LoadX509KeyPair(clientCert, clientKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+		config.Certificates = []tls.Certificate{cert}
 	}
 
 	return config, nil
