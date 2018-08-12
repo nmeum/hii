@@ -164,12 +164,14 @@ func recvInput(client *girc.Client, name string) {
 		line, err := bufio.NewReader(fifo).ReadString('\n')
 		if err != nil {
 			log.Println(err)
+			goto cont
 		}
-		fifo.Close()
 
 		line = line[0 : len(line)-1]
 		fmt.Println("SENDING", line)
 
+	cont:
+		fifo.Close()
 		os.Remove(fp)
 	}
 }
