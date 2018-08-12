@@ -16,7 +16,7 @@ achieve memory safety while at it.
 This is work in progress. At the moment this is a rather incomplete
 reimplementation of ii, supporting a subset of the features supported by
 ii. The current plan is to cleanup and improve the existing code base
-before starting to implement the features listed below.
+before starting to implement more of the planned features listed below.
 
 This cleanup involves increasing backwards compatibility with ii and
 figure out how much backwards compatibility should be provided.
