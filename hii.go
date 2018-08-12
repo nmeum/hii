@@ -310,7 +310,6 @@ func addHandlers(client *girc.Client) {
 }
 
 func main() {
-	// TODO: make logger write to stderr
 	log.SetFlags(log.Lshortfile)
 
 	flag.Usage = usage
