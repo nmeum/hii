@@ -84,14 +84,14 @@ func parseFlags() {
 	flag.StringVar(&server, "s", "irc.freenode.net", "IRC server")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 
+	flag.Parse()
+
 	if (clientKey == "" && clientCert != "") || (clientKey != "" && clientCert == "") {
 		log.Fatal("For using certFP a certificate and key need to be provided")
 	}
 	if (clientKey != "" || clientCert != "" || certs != "") && !useTLS {
 		log.Fatal("Certificates given but TLS wasn't enabled")
 	}
-
-	flag.Parse()
 }
 
 func getTLSconfig() (*tls.Config, error) {
