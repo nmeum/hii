@@ -45,6 +45,7 @@ var (
 var channelCmds = map[string]bool{
 	girc.JOIN:  true,
 	girc.PART:  true,
+	girc.KICK:  true,
 	girc.MODE:  true,
 	girc.TOPIC: true,
 	girc.NAMES: true,
