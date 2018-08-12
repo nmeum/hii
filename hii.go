@@ -290,8 +290,10 @@ func addHandlers(client *girc.Client) {
 			log.Fatal("Couldn't create master channel")
 		}
 
-		// XXX: Just for testing purposes
-		c.Cmd.Join("#hii")
+		if flag.NArg() > 0 {
+			channels := flag.Args()[0:]
+			c.Cmd.Join(channels...)
+		}
 	})
 
 	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {

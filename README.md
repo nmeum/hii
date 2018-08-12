@@ -29,10 +29,10 @@ New features (compared to ii):
 * Partial compatibility with ii
 * Built-in IPv6 support
 * A proper protocol implementation through [girc][girc repo]
+* Automatically joining channels on startup
 
 Planned features include:
 
-* Automatically joining channels on startup
 * Built-in TLS support
 * Built-in support for selecting messages matching a given pattern
 
