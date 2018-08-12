@@ -72,7 +72,7 @@ func parseFlags() {
 	}
 
 	// Flags are declared in this function instead of declaring them
-	// globally directly in order to properly utilize the os/user package.
+	// globally in order to properly utilize the os/user package.
 
 	flag.StringVar(&clientKey, "k", "", "key for certFP")
 	flag.StringVar(&clientCert, "c", "", "cert for certFP")
