@@ -21,6 +21,32 @@ before starting to implement more of the planned features listed below.
 This cleanup involves increasing backwards compatibility with ii and
 figure out how much backwards compatibility should be provided.
 
+## Compatibility with ii
+
+hii is not entirely backwards compatibly with ii. The directory
+structure and the output emitted on `out` files should be compatible
+with ii everything else pretty much isn't. In the following
+incompatibilities with ii are described further.
+
+The following properties of ii were not implemented intentionally:
+
+* Automatic authorization using the [PASS command][password message] is
+  not implemented (ii `-k` flag). Use authorization using TLS client
+  certificates (CertFP) instead. [Most][freenode certfp]
+  [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
+* Data received from the IRC server is not emitted on standard output.
+
+The following properties of ii are currently not implemented. However,
+they *may* be implemented in future version of hii:
+
+* The mapping of data received from the IRC server to `out` files is not
+  entirely the same. Meaning ii will write certain commands to the
+  server `out` file while hii will write them to a channel specific
+  `out` file and vice versa.
+* The format used for data written to `out` files differs. hii writes
+  currently writes raw server responses to the file while ii transform
+  the received responses a bit.
+
 ## Features
 
 New features (compared to ii):
@@ -53,3 +79,7 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 
 [ii homepage]: https://tools.suckless.org/
 [girc repo]: https://github.com/lrstanley/girc
+[password message]: https://tools.ietf.org/html/rfc1459#section-4.1.1
+[freenode certfp]: https://freenode.net/kb/answer/certfp
+[oftc certfp]: https://www.oftc.net/NickServ/CertFP/
+[hackint certfp]: https://www.hackint.org/services#NickServ
