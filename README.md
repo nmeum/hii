@@ -1,6 +1,6 @@
 # hii
 
-Harmful [ii(1)][ii homepage] as known as ii for humans.
+Harmful [ii(1)][ii homepage] also known as ii for humans.
 
 ## Motivation
 
