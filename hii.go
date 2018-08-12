@@ -137,6 +137,16 @@ func createChannel(client *girc.Client, name string) error {
 	return nil
 }
 
+func removeChannel(client *girc.Client, name string) error {
+	chanName := girc.ToRFC1459(name)
+	fp, ok := channels[chanName]
+	if !ok {
+		return fmt.Errorf("no directory exists for %q", name)
+	}
+
+	return os.Remove(fp)
+}
+
 func joinChannel(client *girc.Client, name string) error {
 	if client.IsInChannel(name) {
 		return fmt.Errorf("client already joined channel %q yet", name)
@@ -248,6 +258,14 @@ func main() {
 		if err != nil {
 			log.Printf("Couldn't create channel %q: %s\n", name, err)
 			c.Cmd.Part(name)
+		}
+	})
+	client.Handlers.Add(girc.PART, func(c *girc.Client, e girc.Event) {
+		name := e.Params[0]
+
+		err := removeChannel(c, name)
+		if err != nil {
+			log.Printf("Couldn't remove channel %q\n", name)
 		}
 	})
 
