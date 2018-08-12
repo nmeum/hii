@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 	"unicode"
 
 	"github.com/lrstanley/girc"
@@ -178,6 +179,22 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 	return nil
 }
 
+func runHandlers(client *girc.Client, cmd, tr string, params ...string) {
+	clientSource := &girc.Source{
+		client.GetNick(),
+		client.GetIdent(),
+		client.GetHost(),
+	}
+
+	client.RunHandlers(&girc.Event{
+		Source:    clientSource,
+		Timestamp: time.Now(),
+		Command:   cmd,
+		Params:    params,
+		Trailing:  tr,
+	})
+}
+
 func isChannelCmd(event *girc.Event) bool {
 	_, ok := channelCmds[event.Command]
 	if !ok {
@@ -234,6 +251,9 @@ func handleInput(client *girc.Client, chanName, input string) error {
 	}
 
 	if input[0] != '/' {
+		// Make sure that our msg is also recorded in the `out` log.
+		runHandlers(client, girc.PRIVMSG, input, chanName)
+
 		cmd.Message(chanName, input)
 		return nil
 	}
