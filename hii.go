@@ -186,6 +186,15 @@ func recvInput(client *girc.Client, name string) {
 	}
 }
 
+func handlePart(client *girc.Client, event girc.Event) {
+	name := event.Params[0]
+
+	err := removeChannel(client, name)
+	if err != nil {
+		log.Printf("Couldn't remove channel %q\n", name)
+	}
+}
+
 func handleMsg(client *girc.Client, event girc.Event) {
 	if event.Source == nil {
 		return
@@ -260,14 +269,9 @@ func main() {
 			c.Cmd.Part(name)
 		}
 	})
-	client.Handlers.Add(girc.PART, func(c *girc.Client, e girc.Event) {
-		name := e.Params[0]
 
-		err := removeChannel(c, name)
-		if err != nil {
-			log.Printf("Couldn't remove channel %q\n", name)
-		}
-	})
+	client.Handlers.Add(girc.PART, handlePart)
+	client.Handlers.Add(girc.KICK, handlePart)
 
 	err = client.Connect()
 	if err != nil {
