@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -251,12 +252,16 @@ func main() {
 		User:   name,
 	})
 
-	// TODO: Cleanup channels on quit and signal (INT, TERM, …)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
+	go func() {
+		<-sig
+		cleanup(client)
+		os.Exit(1)
+	}()
 
-	quit := make(chan bool)
 	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
 		cleanup(c)
-		quit <- true
 	})
 
 	client.Handlers.Add(girc.ALL_EVENTS, handleMsg)
@@ -287,6 +292,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	<-quit
 }
