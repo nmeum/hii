@@ -74,7 +74,7 @@ func parseFlags() {
 	// globally directly in order to properly utilize the os/user package.
 
 	flag.StringVar(&clientCert, "a", "", "client certificates")
-	flag.StringVar(&certs, "c", "", "root certificates")
+	flag.StringVar(&certs, "r", "", "root certificates")
 	flag.StringVar(&name, "f", user.Name, "real name")
 	flag.StringVar(&prefix, "i", filepath.Join(user.HomeDir, "irc"), "directory path")
 	flag.StringVar(&nick, "n", user.Username, "nick")
