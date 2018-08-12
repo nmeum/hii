@@ -41,6 +41,15 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+func cleanup(client *girc.Client) {
+	for name, _ := range channels {
+		err := removeChannel(client, name)
+		if err != nil {
+			log.Printf("Couldn't remove channel %q\n", name)
+		}
+	}
+}
+
 func parseFlags() {
 	user, err := user.Current()
 	if err != nil {
@@ -246,6 +255,7 @@ func main() {
 
 	quit := make(chan bool)
 	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
+		cleanup(c)
 		quit <- true
 	})
 
