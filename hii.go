@@ -237,7 +237,7 @@ func removeChannel(client *girc.Client, name string) error {
 
 func joinChannel(client *girc.Client, name string) error {
 	if client.IsInChannel(name) {
-		return fmt.Errorf("client already joined channel %q yet", name)
+		return fmt.Errorf("client already joined channel %q", name)
 	} else if !girc.IsValidChannel(name) {
 		return fmt.Errorf("%q is not a valid channel name", name)
 	}
