@@ -139,7 +139,12 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 
 func isChannelCmd(event *girc.Event) bool {
 	_, ok := channelCmds[event.Command]
-	return ok && len(event.Params) >= 1
+	if !ok {
+		return false
+	}
+
+	return len(event.Params) >= 1 &&
+		girc.IsValidChannel(event.Params[0])
 }
 
 func createChannel(client *girc.Client, name string) error {
