@@ -24,6 +24,8 @@ const (
 	infn  = "in"
 )
 
+var channels = make(map[string]string)
+
 var (
 	clientCert string
 	certs      string
@@ -34,7 +36,14 @@ var (
 	server     string
 )
 
-var channels = make(map[string]string)
+var channelCmds = map[string]bool{
+	girc.JOIN:  true,
+	girc.PART:  true,
+	girc.MODE:  true,
+	girc.TOPIC: true,
+	girc.NAMES: true,
+	girc.LIST:  true,
+}
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "USAGE: %s [FLAGS] [CHAN...]\n\n"+
@@ -126,6 +135,11 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 	}
 
 	return nil
+}
+
+func isChannelCmd(event *girc.Event) bool {
+	_, ok := channelCmds[event.Command]
+	return ok && len(event.Params) >= 1
 }
 
 func createChannel(client *girc.Client, name string) error {
@@ -236,7 +250,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	}
 
 	dir := ircPath
-	if event.IsFromChannel() {
+	if event.IsFromChannel() || isChannelCmd(&event) {
 		dir = filepath.Join(dir, normalize(event.Params[0]))
 	} else if event.IsFromUser() {
 		dir = filepath.Join(dir, normalize(event.Source.Name))
@@ -275,8 +289,6 @@ func addHandlers(client *girc.Client) {
 
 	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {
 		name := e.Params[0]
-
-		// TODO: create out as well on JOIN
 
 		err := joinChannel(c, name)
 		if err != nil {
