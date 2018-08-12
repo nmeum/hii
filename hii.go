@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -84,6 +87,25 @@ func parseFlags() {
 	}
 
 	flag.Parse()
+}
+
+func getTLSconfig() (*tls.Config, error) {
+	config := &tls.Config{ServerName: server}
+	if certs != "" {
+		data, err := ioutil.ReadFile(certs)
+		if err != nil {
+			return nil, err
+		}
+
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(data) {
+			return nil, fmt.Errorf("couldn't parse certificate %q", certs)
+		}
+
+		config.RootCAs = pool
+	}
+
+	return config, nil
 }
 
 // Briefly modeled after the channel_normalize_path ii function.
@@ -327,13 +349,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// TODO: Set TLSConfig member
+	var tlsconf *tls.Config
+	if useTLS {
+		tlsconf, err = getTLSconfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	client := girc.New(girc.Config{
-		Server: server,
-		Port:   port,
-		Nick:   nick,
-		User:   name,
-		SSL:    useTLS,
+		Server:    server,
+		Port:      port,
+		Nick:      nick,
+		User:      name,
+		SSL:       useTLS,
+		TLSConfig: tlsconf,
 	})
 
 	sig := make(chan os.Signal, 1)
