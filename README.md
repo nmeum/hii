@@ -46,6 +46,7 @@ they *may* be implemented in future version of hii:
 * The format used for data written to `out` files differs. hii writes
   currently writes raw server responses to the file while ii transform
   the received responses a bit.
+* Shortcut commands such as `/j` are currently not implemented.
 
 ## Features
 
