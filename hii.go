@@ -167,6 +167,27 @@ func joinChannel(client *girc.Client, name string) error {
 	return createChannel(client, name)
 }
 
+func handleInput(client *girc.Client, chanName, input string) error {
+	cmd := client.Cmd
+	if input == "" {
+		return nil
+	}
+
+	if input[0] != '/' {
+		cmd.Message(chanName, input)
+		return nil
+	}
+
+	if len(input) >= 1 {
+		return nil
+	}
+	input = input[1:]
+
+	// TODO handle shortcut commands
+
+	return cmd.SendRaw(input)
+}
+
 func recvInput(client *girc.Client, name string) {
 	for {
 		fp, ok := channels[name]
@@ -188,7 +209,11 @@ func recvInput(client *girc.Client, name string) {
 		}
 
 		line = line[0 : len(line)-1]
-		fmt.Println("SENDING", line)
+		err = handleInput(client, name, line)
+		if err != nil {
+			log.Println(err)
+			goto cont
+		}
 
 	cont:
 		fifo.Close()
@@ -250,6 +275,8 @@ func addHandlers(client *girc.Client) {
 
 	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {
 		name := e.Params[0]
+
+		// TODO: create out as well on JOIN
 
 		err := joinChannel(c, name)
 		if err != nil {
