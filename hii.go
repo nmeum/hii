@@ -34,6 +34,7 @@ var (
 	nick       string
 	port       int
 	server     string
+	useTLS     bool
 )
 
 var channelCmds = map[string]bool{
@@ -76,6 +77,11 @@ func parseFlags() {
 	flag.StringVar(&nick, "n", user.Username, "nick")
 	flag.IntVar(&port, "p", 6667, "TCP port")
 	flag.StringVar(&server, "s", "irc.freenode.net", "IRC server")
+	flag.BoolVar(&useTLS, "t", false, "use TLS")
+
+	if (clientCert != "" || certs != "") && !useTLS {
+		log.Fatal("Certificates given but TLS wasn't enabled")
+	}
 
 	flag.Parse()
 }
@@ -327,6 +333,7 @@ func main() {
 		Port:   port,
 		Nick:   nick,
 		User:   name,
+		SSL:    useTLS,
 	})
 
 	sig := make(chan os.Signal, 1)
