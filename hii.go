@@ -34,7 +34,7 @@ var (
 	server     string
 )
 
-var channels map[string]string
+var channels = make(map[string]string)
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "USAGE: %s [FLAGS] [CHAN...]\n\n"+
@@ -289,8 +289,6 @@ func addHandlers(client *girc.Client) {
 }
 
 func main() {
-	channels = make(map[string]string)
-
 	// TODO: make logger write to stderr
 	log.SetFlags(log.Lshortfile)
 
