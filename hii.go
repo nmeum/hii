@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"unicode"
 
 	"github.com/lrstanley/girc"
@@ -29,6 +32,8 @@ var (
 	port       int
 	server     string
 )
+
+var channels map[string]string
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "USAGE: %s [FLAGS] [CHAN...]\n\n"+
@@ -77,6 +82,26 @@ func normalize(name string) string {
 	return strings.Map(mfunc, name)
 }
 
+// Like os.OpenFile but for FIFOs.
+func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		err = syscall.Mkfifo(name, syscall.S_IFIFO|uint32(perm))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Printf("named pipe for channel %q already exists\n", name)
+	}
+
+	fifo, err := os.OpenFile(name, flag, perm)
+	if err != nil {
+		return nil, err
+	}
+
+	return fifo, err
+}
+
 // Like ioutil.Write but doesn't truncate and appends instead.
 func appendFile(filename string, data []byte, perm os.FileMode) error {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
@@ -91,6 +116,62 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 	}
 
 	return nil
+}
+
+func createChannel(client *girc.Client, name string) error {
+	chanName := girc.ToRFC1459(name)
+	_, ok := channels[chanName]
+	if ok {
+		return fmt.Errorf("already joined %q", name)
+	}
+
+	dir := filepath.Join(ircPath, normalize(name))
+	err := os.MkdirAll(dir, 0700)
+	if err != nil {
+		return err
+	}
+
+	channels[chanName] = filepath.Join(dir, infn)
+	go recvInput(client, chanName)
+
+	return nil
+}
+
+func joinChannel(client *girc.Client, name string) error {
+	if client.IsInChannel(name) {
+		return fmt.Errorf("client already joined channel %q yet", name)
+	} else if !girc.IsValidChannel(name) {
+		return fmt.Errorf("%q is not a valid channel name", name)
+	}
+
+	return createChannel(client, name)
+}
+
+func recvInput(client *girc.Client, name string) {
+	for {
+		fp, ok := channels[name]
+		if !ok {
+			break
+		}
+
+		fifo, err := openFifo(fp, os.O_RDONLY, 0600)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatal(err)
+		}
+
+		line, err := bufio.NewReader(fifo).ReadString('\n')
+		if err != nil {
+			log.Println(err)
+		}
+		fifo.Close()
+
+		line = line[0 : len(line)-1]
+		fmt.Println("SENDING", line)
+
+		os.Remove(fp)
+	}
 }
 
 func handleMsg(client *girc.Client, event girc.Event) {
@@ -110,6 +191,8 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		log.Fatal(err)
 	}
 
+	// TODO: create channel on private message from user
+
 	outfp := filepath.Join(dir, outfn)
 	err = appendFile(outfp, append(event.Bytes(), byte('\n')), 0600)
 	if err != nil {
@@ -118,6 +201,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 }
 
 func main() {
+	channels = make(map[string]string)
 	log.SetFlags(log.Lshortfile)
 
 	flag.Usage = usage
@@ -137,15 +221,32 @@ func main() {
 		User:   name,
 	})
 
+	// TODO: Cleanup channels on quit and signal (INT, TERM, …)
+
 	quit := make(chan bool)
 	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
 		quit <- true
 	})
 
-	// XXX: Just for testing purposes
 	client.Handlers.Add(girc.ALL_EVENTS, handleMsg)
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
+		err := createChannel(c, "")
+		if err != nil {
+			log.Fatal("Couldn't create master channel")
+		}
+
+		// XXX: Just for testing purposes
 		c.Cmd.Join("#hii")
+	})
+
+	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {
+		name := e.Params[0]
+
+		err := joinChannel(c, name)
+		if err != nil {
+			log.Printf("Couldn't create channel %q: %s\n", name, err)
+			c.Cmd.Part(name)
+		}
 	})
 
 	err = client.Connect()
