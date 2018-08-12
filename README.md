@@ -19,7 +19,7 @@ ii. The current plan is to cleanup and improve the existing code base
 before starting to implement more of the planned features listed below.
 
 This cleanup involves increasing backwards compatibility with ii and
-figure out how much backwards compatibility should be provided.
+figuring out how much backwards compatibility should be provided.
 
 ## Compatibility with ii
 
