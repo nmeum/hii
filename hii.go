@@ -268,7 +268,9 @@ func recvInput(client *girc.Client, name string) {
 			goto cont
 		}
 
+		// ReadString retains the delimiter → strip it!
 		line = line[0 : len(line)-1]
+
 		err = handleInput(client, name, line)
 		if err != nil {
 			log.Println(err)
