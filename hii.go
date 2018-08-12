@@ -231,6 +231,36 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	}
 }
 
+func addHandlers(client *girc.Client) {
+	client.Handlers.Add(girc.PART, handlePart)
+	client.Handlers.Add(girc.KICK, handlePart)
+	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
+		cleanup(c)
+	})
+
+	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
+		err := createChannel(c, "")
+		if err != nil {
+			log.Fatal("Couldn't create master channel")
+		}
+
+		// XXX: Just for testing purposes
+		c.Cmd.Join("#hii")
+	})
+
+	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {
+		name := e.Params[0]
+
+		err := joinChannel(c, name)
+		if err != nil {
+			log.Printf("Couldn't create channel %q: %s\n", name, err)
+			c.Cmd.Part(name)
+		}
+	})
+
+	client.Handlers.Add(girc.ALL_EVENTS, handleMsg)
+}
+
 func main() {
 	channels = make(map[string]string)
 	log.SetFlags(log.Lshortfile)
@@ -260,34 +290,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
-		cleanup(c)
-	})
-
-	client.Handlers.Add(girc.ALL_EVENTS, handleMsg)
-	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		err := createChannel(c, "")
-		if err != nil {
-			log.Fatal("Couldn't create master channel")
-		}
-
-		// XXX: Just for testing purposes
-		c.Cmd.Join("#hii")
-	})
-
-	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {
-		name := e.Params[0]
-
-		err := joinChannel(c, name)
-		if err != nil {
-			log.Printf("Couldn't create channel %q: %s\n", name, err)
-			c.Cmd.Part(name)
-		}
-	})
-
-	client.Handlers.Add(girc.PART, handlePart)
-	client.Handlers.Add(girc.KICK, handlePart)
-
+	addHandlers(client)
 	err = client.Connect()
 	if err != nil {
 		log.Fatal(err)
