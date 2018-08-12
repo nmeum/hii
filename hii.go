@@ -304,6 +304,24 @@ func recvInput(client *girc.Client, name string) {
 	}
 }
 
+func fmtEvent(event *girc.Event) (string, bool) {
+	out, ok := event.Pretty()
+	if !ok {
+		return "", false
+	}
+
+	if len(event.Params) >= 1 {
+		// Strip the channel from the output string since this
+		// information is already encoded in the file path.
+
+		prefix := fmt.Sprintf("[%s] ", event.Params[0])
+		out = strings.TrimPrefix(out, prefix)
+	}
+
+	out = fmt.Sprintf("%v %s\n", event.Timestamp.Unix(), out)
+	return out, true
+}
+
 func handlePart(client *girc.Client, event girc.Event) {
 	name := event.Params[0]
 
@@ -334,8 +352,13 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		log.Fatal(err)
 	}
 
+	out, ok := fmtEvent(&event)
+	if !ok {
+		return
+	}
+
 	outfp := filepath.Join(dir, outfn)
-	err = appendFile(outfp, append(event.Bytes(), byte('\n')), 0600)
+	err = appendFile(outfp, []byte(out), 0600)
 	if err != nil {
 		log.Printf("Couldn't write to %q: %s\n", outfp, err)
 	}
