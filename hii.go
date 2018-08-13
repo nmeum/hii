@@ -249,6 +249,7 @@ func removeChannel(client *girc.Client, name string) error {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
 
+	delete(channels, chanName)
 	return os.Remove(fp)
 }
 
