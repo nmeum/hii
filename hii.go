@@ -226,7 +226,8 @@ func createChannel(client *girc.Client, name string) error {
 	chanName := girc.ToRFC1459(name)
 	_, ok := channels[chanName]
 	if ok {
-		return fmt.Errorf("already joined %q", name)
+		log.Println("Client already joined channel %q", name)
+		return nil
 	}
 
 	dir := filepath.Join(ircPath, normalize(name))
@@ -252,9 +253,7 @@ func removeChannel(client *girc.Client, name string) error {
 }
 
 func joinChannel(client *girc.Client, name string) error {
-	if client.IsInChannel(name) {
-		return fmt.Errorf("client already joined channel %q", name)
-	} else if !girc.IsValidChannel(name) {
+	if !girc.IsValidChannel(name) {
 		return fmt.Errorf("%q is not a valid channel name", name)
 	}
 
@@ -357,7 +356,11 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		dir = filepath.Join(dir, normalize(name))
 
 		// createChannel only creates a channel if it doesn't exist.
-		createChannel(client, name)
+		err := createChannel(client, name)
+		if err != nil {
+			log.Println("Couldn't create channel %q", name)
+			return
+		}
 	} else {
 		channel, isChanCmd := getCmdChan(&event)
 		if isChanCmd {
@@ -406,7 +409,7 @@ func addHandlers(client *girc.Client) {
 
 		err := joinChannel(c, name)
 		if err != nil {
-			log.Printf("Couldn't create channel %q: %s\n", name, err)
+			log.Printf("Couldn't join channel %q: %s\n", name, err)
 			c.Cmd.Part(name)
 		}
 	})
