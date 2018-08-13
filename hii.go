@@ -318,7 +318,7 @@ func fmtEvent(event *girc.Event) (string, bool) {
 		return "", false
 	}
 
-	if len(event.Params) >= 1 {
+	if len(event.Params) >= 1 && girc.IsValidChannel(event.Params[0]) {
 		// Strip the channel from the output string since this
 		// information is already encoded in the file path.
 
