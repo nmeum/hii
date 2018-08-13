@@ -270,14 +270,14 @@ func handleInput(client *girc.Client, chanName, input string) error {
 		return nil
 	}
 
-	if len(input) >= 1 {
+	if len(input) <= 1 {
 		return nil
 	}
 	input = input[1:]
 
 	// TODO handle shortcut commands
 
-	return cmd.SendRaw(input)
+	return cmd.SendRaw(input + "\r\n")
 }
 
 func recvInput(client *girc.Client, name string) {
