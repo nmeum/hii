@@ -283,22 +283,19 @@ func recvInput(client *girc.Client, name string) {
 			log.Fatal(err)
 		}
 
-		line, err := bufio.NewReader(fifo).ReadString('\n')
-		if err != nil {
-			log.Println(err)
-			goto cont
+		scanner := bufio.NewScanner(fifo)
+		for scanner.Scan() {
+			err = handleInput(client, name, scanner.Text())
+			if err != nil {
+				log.Println(err)
+			}
 		}
 
-		// ReadString retains the delimiter → strip it!
-		line = line[0 : len(line)-1]
-
-		err = handleInput(client, name, line)
+		err = scanner.Err()
 		if err != nil {
 			log.Println(err)
-			goto cont
 		}
 
-	cont:
 		fifo.Close()
 		os.Remove(fp)
 	}
