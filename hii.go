@@ -330,12 +330,44 @@ func fmtEvent(event *girc.Event) (string, bool) {
 	return out, true
 }
 
+func handleJoin(client *girc.Client, event girc.Event) {
+	if event.Source.Name != client.GetNick() {
+		return
+	}
+	name := event.Params[0]
+
+	err := joinChannel(client, name)
+	if err != nil {
+		log.Printf("Couldn't join channel %q: %s\n", name, err)
+		client.Cmd.Part(name)
+	}
+}
+
 func handlePart(client *girc.Client, event girc.Event) {
+	if event.Source.Name != client.GetNick() {
+		return
+	}
+
+	if len(event.Params) < 1 {
+		return
+	}
 	name := event.Params[0]
 
 	err := removeChannel(client, name)
 	if err != nil {
-		log.Printf("Couldn't remove channel %q\n", name)
+		log.Printf("Couldn't remove channel %q after part\n", name)
+	}
+}
+
+func handleKick(client *girc.Client, event girc.Event) {
+	if len(event.Params) < 2 || event.Params[1] != client.GetNick() {
+		return
+	}
+	name := event.Params[0]
+
+	err := removeChannel(client, name)
+	if err != nil {
+		log.Printf("Couldn't remove channel %q after kick\n", name)
 	}
 }
 
@@ -382,12 +414,6 @@ func handleMsg(client *girc.Client, event girc.Event) {
 }
 
 func addHandlers(client *girc.Client) {
-	client.Handlers.Add(girc.PART, handlePart)
-	client.Handlers.Add(girc.KICK, handlePart)
-	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
-		cleanup(c)
-	})
-
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
 		err := createChannel(c, "")
 		if err != nil {
@@ -399,16 +425,13 @@ func addHandlers(client *girc.Client) {
 			c.Cmd.Join(channels...)
 		}
 	})
-
-	client.Handlers.Add(girc.JOIN, func(c *girc.Client, e girc.Event) {
-		name := e.Params[0]
-
-		err := joinChannel(c, name)
-		if err != nil {
-			log.Printf("Couldn't join channel %q: %s\n", name, err)
-			c.Cmd.Part(name)
-		}
+	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
+		cleanup(c)
 	})
+
+	client.Handlers.Add(girc.JOIN, handleJoin)
+	client.Handlers.Add(girc.PART, handlePart)
+	client.Handlers.Add(girc.KICK, handleKick)
 
 	client.Handlers.Add(girc.ALL_EVENTS, handleMsg)
 }
