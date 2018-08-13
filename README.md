@@ -13,55 +13,41 @@ achieve memory safety while at it.
 
 ## Status
 
-This is work in progress. At the moment this is a rather incomplete
-reimplementation of ii, supporting a subset of the features supported by
-ii. The current plan is to cleanup and improve the existing code base
-before starting to implement more of the planned features listed below.
-
-This cleanup involves increasing backwards compatibility with ii and
-figuring out how much backwards compatibility should be provided.
-
-## Compatibility with ii
-
-hii is not entirely backwards compatibly with ii. The directory
-structure and the output emitted on `out` files should be compatible
-with ii everything else pretty much isn't. In the following
-incompatibilities with ii are described further.
-
-The following properties of ii were not implemented intentionally:
-
-* Automatic authorization using the [PASS command][password message] is
-  not implemented (ii `-k` flag). Use authorization using TLS client
-  certificates (CertFP) instead. [Most][freenode certfp]
-  [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
-* Data received from the IRC server is not emitted on standard output.
-
-The following properties of ii are currently not implemented. However,
-they *may* be implemented in future version of hii:
-
-* The mapping of data received from the IRC server to `out` files is not
-  entirely the same. Meaning ii will write certain commands to the
-  server `out` file while hii will write them to a channel specific
-  `out` file and vice versa.
-* The format used for data written to `out` files differs. hii writes
-  currently writes raw server responses to the file while ii transform
-  the received responses a bit.
-* Shortcut commands such as `/j` are currently not implemented.
+This is work in progress. Some of the features I intended to add to ii
+are already implemented, others aren't. Besides, I am currently not
+using this myself since I didn't finish work on the frontend yet, thus
+the code is like full of bugs and very unstable.
 
 ## Features
 
 New features (compared to ii):
 
 * Memory safety
-* Partial compatibility with ii
-* Built-in IPv6 support
-* A proper protocol implementation through [girc][girc repo]
-* Automatically joining channels on startup
+* A proper IRC protocol implementation through [girc][girc repo]
+* Support for automatically joining channels on startup
 * Built-in TLS support
+* Built-in IPv6 support
+
+Features intentionally not implemented:
+
+* Automatic authorization using the [PASS command][password message] is
+  not implemented (ii `-k` flag). Use authorization using TLS client
+  certificates (CertFP) instead. [Most][freenode certfp]
+  [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
+* Shortcut commands, e.g. `/j`. If you need them write yourself a shell
+  script for mapping shortcut commands to real commands.
 
 Planned features include:
 
 * Built-in support for selecting messages matching a given pattern
+
+### Compatibility with ii
+
+Backwards compatibility with ii wasn't a goal. While the directory
+structure created by hii is the same as the one created by ii everything
+else is pretty much different. This is the case because proper backwards
+compatibility would have been a lot of work and I personally
+didn't need it.
 
 ## License
 
