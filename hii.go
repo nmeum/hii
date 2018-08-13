@@ -31,6 +31,7 @@ const (
 var channels = make(map[string]string)
 
 var (
+	server     string
 	clientKey  string
 	clientCert string
 	certs      string
@@ -38,7 +39,6 @@ var (
 	prefix     string
 	nick       string
 	port       int
-	server     string
 	useTLS     bool
 )
 
@@ -53,9 +53,15 @@ var channelCmds = map[string]bool{
 }
 
 func usage() {
-	fmt.Fprintf(flag.CommandLine.Output(), "USAGE: %s [FLAGS] [CHAN...]\n\n"+
-		"The following flags are supported:\n\n", os.Args[0])
+	fmt.Fprintf(flag.CommandLine.Output(),
+		"USAGE: %s [FLAGS] SERVER [CHANNEL...]\n\n"+
+			"The following flags are supported:\n\n", os.Args[0])
 	flag.PrintDefaults()
+
+	// Explicitly calling os.Exit here to be able to also use this
+	// function when command-line arguments are missing. The Exit
+	// status 2 is also used by flag.ExitOnError.
+	os.Exit(2)
 }
 
 func cleanup(client *girc.Client) {
@@ -83,10 +89,15 @@ func parseFlags() {
 	flag.StringVar(&prefix, "i", filepath.Join(user.HomeDir, "irc"), "directory path")
 	flag.StringVar(&nick, "n", user.Username, "nick")
 	flag.IntVar(&port, "p", 6667, "TCP port")
-	flag.StringVar(&server, "s", "irc.freenode.net", "IRC server")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 
 	flag.Parse()
+
+	if flag.NArg() < 1 {
+		fmt.Fprintf(flag.CommandLine.Output(), "Missing server argument\n")
+		usage()
+	}
+	server = flag.Arg(0)
 
 	if (clientKey == "" && clientCert != "") || (clientKey != "" && clientCert == "") {
 		log.Fatal("For using certFP a certificate and key need to be provided")
@@ -374,8 +385,8 @@ func addHandlers(client *girc.Client) {
 			log.Fatal("Couldn't create master channel")
 		}
 
-		if flag.NArg() > 0 {
-			channels := flag.Args()[0:]
+		if flag.NArg() > 1 {
+			channels := flag.Args()[1:]
 			c.Cmd.Join(channels...)
 		}
 	})
