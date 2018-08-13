@@ -42,14 +42,15 @@ var (
 	useTLS     bool
 )
 
-var channelCmds = map[string]bool{
-	girc.JOIN:  true,
-	girc.PART:  true,
-	girc.KICK:  true,
-	girc.MODE:  true,
-	girc.TOPIC: true,
-	girc.NAMES: true,
-	girc.LIST:  true,
+var channelCmds = map[string]int{
+	girc.JOIN:      0,
+	girc.PART:      0,
+	girc.KICK:      0,
+	girc.MODE:      0,
+	girc.TOPIC:     0,
+	girc.NAMES:     0,
+	girc.LIST:      0,
+	girc.RPL_TOPIC: 1,
 }
 
 func usage() {
@@ -207,14 +208,18 @@ func runHandlers(client *girc.Client, cmd, tr string, params ...string) {
 	})
 }
 
-func isChannelCmd(event *girc.Event) bool {
-	_, ok := channelCmds[event.Command]
-	if !ok {
-		return false
+func getCmdChan(event *girc.Event) (string, bool) {
+	idx, ok := channelCmds[event.Command]
+	if !ok || len(event.Params) < idx+1 {
+		return "", false
 	}
 
-	return len(event.Params) >= 1 &&
-		girc.IsValidChannel(event.Params[0])
+	chanName := event.Params[idx]
+	if girc.IsValidChannel(chanName) {
+		return chanName, true
+	}
+
+	return "", false
 }
 
 func createChannel(client *girc.Client, name string) error {
@@ -345,7 +350,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	}
 
 	dir := ircPath
-	if event.IsFromChannel() || isChannelCmd(&event) {
+	if event.IsFromChannel() {
 		dir = filepath.Join(dir, normalize(event.Params[0]))
 	} else if event.IsFromUser() {
 		name := event.Source.Name
@@ -353,6 +358,11 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 		// createChannel only creates a channel if it doesn't exist.
 		createChannel(client, name)
+	} else {
+		channel, isChanCmd := getCmdChan(&event)
+		if isChanCmd {
+			dir = filepath.Join(dir, normalize(channel))
+		}
 	}
 
 	err := os.MkdirAll(dir, 0700)
