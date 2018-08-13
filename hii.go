@@ -261,7 +261,6 @@ func joinChannel(client *girc.Client, name string) error {
 }
 
 func handleInput(client *girc.Client, chanName, input string) error {
-	cmd := client.Cmd
 	if input == "" {
 		return nil
 	}
@@ -270,18 +269,15 @@ func handleInput(client *girc.Client, chanName, input string) error {
 		// Make sure that our msg is also recorded in the `out` log.
 		runHandlers(client, girc.PRIVMSG, input, chanName)
 
-		cmd.Message(chanName, input)
+		client.Cmd.Message(chanName, input)
 		return nil
 	}
 
 	if len(input) <= 1 {
 		return nil
 	}
-	input = input[1:]
 
-	// TODO handle shortcut commands
-
-	return cmd.SendRaw(input + "\r\n")
+	return client.Cmd.SendRaw(input[1:] + "\r\n")
 }
 
 func recvInput(client *girc.Client, name string) {
