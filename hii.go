@@ -127,7 +127,7 @@ func getTLSconfig() (*tls.Config, error) {
 	if clientCert != "" && clientKey != "" {
 		cert, err := tls.LoadX509KeyPair(clientCert, clientKey)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		config.Certificates = []tls.Certificate{cert}
 	}
