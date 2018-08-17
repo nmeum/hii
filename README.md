@@ -54,6 +54,26 @@ else is pretty much different. This is the case because proper backwards
 compatibility would have been a lot of work and I personally
 didn't need it.
 
+## Installation
+
+The program can be installed either using `go get` or `GNU make`. The
+latter automatically setups a `GOPATH` and thus doesn't require the go
+toolchain to be configured properly.
+
+### go get
+
+To install to the program using `go get` run the following command:
+
+	$ go get github.com/nmeum/hii
+
+### GNU make
+
+To install it using `GNU make`, which is the preferred way when
+packing this software for a distribution, run the following commands:
+
+	$ make
+	$ make install
+
 ## License
 
 This program is free software: you can redistribute it and/or modify it
