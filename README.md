@@ -39,6 +39,7 @@ Features intentionally not implemented:
 
 Planned features include:
 
+* Support for a per-channel nick list
 * Built-in support for selecting messages matching a given pattern
 
 ### Compatibility with ii
