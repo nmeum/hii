@@ -42,6 +42,10 @@ Planned features include:
 * Support for a per-channel nick list
 * Built-in support for selecting messages matching a given pattern
 
+While hii certainly has more features than ii it is still supposed to
+have a limit feature set and shouldn't ["expand until it can read mail"]
+[jwz's law].
+
 ### Compatibility with ii
 
 Backwards compatibility with ii wasn't a goal. While the directory
@@ -71,3 +75,4 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 [freenode certfp]: https://freenode.net/kb/answer/certfp
 [oftc certfp]: https://www.oftc.net/NickServ/CertFP/
 [hackint certfp]: https://www.hackint.org/services#NickServ
+[jwz's law]: https://en.wikipedia.org/wiki/Zawinski's_law_of_software_envelopment#Principles
