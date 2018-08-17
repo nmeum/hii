@@ -21,6 +21,10 @@ import (
 	"github.com/lrstanley/girc"
 )
 
+// TODO: Detect PING timeout and quit (suspend laptop to reproduce this)
+// TODO: Figure out a way to create new in FIFOs for queries
+// TODO: Handle away and nick message properly
+
 var ircPath string
 
 const (
