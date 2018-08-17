@@ -1,0 +1,139 @@
+.Dd $Mdocdate: July 31 2018 $
+.Dt HII 1
+.Os
+.Sh NAME
+.Nm hii
+.Nd a filesystem based IRC client
+.Sh SYNOPSIS
+.Nm hii
+.Op Fl k Ar key
+.Op Fl c Ar cert
+.Op Fl r Ar certs
+.Op Fl f Ar name
+.Op Fl i Ar prefix
+.Op Fl n Ar nick
+.Op Fl p Ar port
+.Op Fl t
+.Ar server
+.Op Ar channel ...
+.Sh DESCRIPTION
+The
+.Nm
+is a FIFO and file system based IRC client.
+It is heavily inspired by
+.Xr ii 1
+but offers more features, e.g. built-in TLS support.
+.Pp
+Just as
+.Xr ii 1
+.Nm
+creates a directory tree for the server containing subdirectory for
+every channel joined and private conversation started on that server.
+The following files are created in each directory:
+.Pp
+.Bl -tag -width "-nosplitX" -offset indent -compact
+.It Pa in
+A
+.Xr fifo 7
+which can be used to write messages to the IRC server.
+If the messages is prefixed with a backslash it is transmitted as a raw
+IRC message, otherwise a
+.Em PRIVMSG
+with the given text is created and send to the channel/user associated
+with the current subdirectory.
+This file is removed as soon as
+.Nm
+terminates.
+.It Pa out
+A regular file containing messages received from the IRC server in a
+human readable format.
+The file only contains IRC messages associated with the channel/user
+represented by the subdirectory.
+This file is not removed on program termination.
+.El
+.Pp
+On startup
+.Nm
+attempts to connect to the given
+.Ar server .
+If a connection was established successful it automatically joins the
+given IRC
+.Ar channels
+(if any). A subdirectory containing the files described above is created
+for each channel.
+Alternatively, subdirectory are also created when the user joins a
+channel manually by writing an IRC join message to the
+.Pa in
+.Xr fifo 7 .
+.Pp
+.Nm
+makes no attempt to reestablish the connection, it simply terminates
+when the connection to the IRC server is lost.
+Automatic reconnection can be achieved by starting
+.Nm
+through a service supervisor such as
+.Xr runsv 8 .
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl k Ar key
+Path to PEM encoded key used for client authorization using TLS, also
+known as
+.Em CertFP .
+This requires
+.Fl c
+and
+.Fl t
+to be given as well.
+.It Fl c Ar cert
+Certificate
+Path to PEM encoded certificate used for client authorization using TLS,
+also known as
+.Em CertFP .
+This requires
+.Fl k
+and
+.Fl t
+to be given as well.
+.It Fl r Ar certs
+Path to file containing root certificates.
+This requires
+.Fl t
+to be given as well.
+Defaults to the host's root CA set.
+.It Fl f Ar name
+Real name associated with the user's nick.
+This defaults to the user's real or display name as specified in the
+GECOS field in
+.Xr passwd 5 .
+.It Fl i Ar prefix
+Path to the root directory used for creating channel and server
+subdirectory.
+Default to
+.Pa ~/irc .
+.It Fl n Ar nick
+Nick name used on the IRC server.
+Defaults to the user's login name.
+.It Fl p Ar port
+TCP port used to connect to the IRC server.
+Defaults to 6667.
+.It Fl t
+Enables TLS, which is disabled by default.
+.El
+.Sh EXAMPLES
+Connect to hackint and join the
+.Nm
+irc channel:
+.Pp
+.Dl hii irc.hackint.eu '#hii'
+.Pp
+Connect to freenode and monitor all server messages:
+.Bd -literal -offset indent
+hii chat.freenode.net &
+tail -f ~/irc/chat.freenode.net/out
+.Ed
+.Sh SEE ALSO
+.Xr ii 1 ,
+.Xr tail 1
+.Sh AUTHORS
+.An Sören Tempel Aq Mt soeren@soeren-tempel.net
