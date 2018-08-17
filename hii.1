@@ -6,11 +6,11 @@
 .Nd a filesystem based IRC client
 .Sh SYNOPSIS
 .Nm hii
-.Op Fl k Ar key
-.Op Fl c Ar cert
-.Op Fl r Ar certs
+.Op Fl k Pa key
+.Op Fl c Pa cert
+.Op Fl r Pa certs
 .Op Fl f Ar name
-.Op Fl i Ar prefix
+.Op Fl i Pa prefix
 .Op Fl n Ar nick
 .Op Fl p Ar port
 .Op Fl t
@@ -76,7 +76,7 @@ through a service supervisor such as
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl k Ar key
+.It Fl k Pa key
 Path to PEM encoded key used for client authorization using TLS, also
 known as
 .Em CertFP .
@@ -85,7 +85,7 @@ This requires
 and
 .Fl t
 to be given as well.
-.It Fl c Ar cert
+.It Fl c Pa cert
 Certificate
 Path to PEM encoded certificate used for client authorization using TLS,
 also known as
@@ -95,7 +95,7 @@ This requires
 and
 .Fl t
 to be given as well.
-.It Fl r Ar certs
+.It Fl r Pa certs
 Path to file containing root certificates.
 This requires
 .Fl t
@@ -106,7 +106,7 @@ Real name associated with the user's nick.
 This defaults to the user's real or display name as specified in the
 GECOS field in
 .Xr passwd 5 .
-.It Fl i Ar prefix
+.It Fl i Pa prefix
 Path to the root directory used for creating channel and server
 subdirectory.
 Default to
