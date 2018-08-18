@@ -313,7 +313,6 @@ func recvInput(client *girc.Client, name string) {
 		}
 
 		fifo.Close()
-		os.Remove(fp)
 	}
 }
 
