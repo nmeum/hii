@@ -227,8 +227,7 @@ func getCmdChan(event *girc.Event) (string, bool) {
 }
 
 func createChannel(client *girc.Client, name string) error {
-	chanName := girc.ToRFC1459(name)
-	_, ok := channels[chanName]
+	_, ok := channels[name]
 	if ok {
 		log.Println("Client already joined channel %q", name)
 		return nil
@@ -240,20 +239,19 @@ func createChannel(client *girc.Client, name string) error {
 		return err
 	}
 
-	channels[chanName] = filepath.Join(dir, infn)
-	go recvInput(client, chanName)
+	channels[name] = filepath.Join(dir, infn)
+	go recvInput(client, name)
 
 	return nil
 }
 
 func removeChannel(client *girc.Client, name string) error {
-	chanName := girc.ToRFC1459(name)
-	fp, ok := channels[chanName]
+	fp, ok := channels[name]
 	if !ok {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
 
-	delete(channels, chanName)
+	delete(channels, name)
 	return os.Remove(fp)
 }
 
@@ -265,16 +263,16 @@ func joinChannel(client *girc.Client, name string) error {
 	return createChannel(client, name)
 }
 
-func handleInput(client *girc.Client, chanName, input string) error {
+func handleInput(client *girc.Client, name, input string) error {
 	if input == "" {
 		return nil
 	}
 
 	if input[0] != '/' {
 		// Make sure that our msg is also recorded in the `out` log.
-		runHandlers(client, girc.PRIVMSG, input, chanName)
+		runHandlers(client, girc.PRIVMSG, input, name)
 
-		client.Cmd.Message(chanName, input)
+		client.Cmd.Message(name, input)
 		return nil
 	}
 
