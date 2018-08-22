@@ -168,8 +168,6 @@ func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		log.Printf("named pipe for channel %q already exists\n", name)
 	}
 
 	fifo, err := os.OpenFile(name, flag, perm)
