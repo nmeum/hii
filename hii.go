@@ -69,7 +69,7 @@ func usage() {
 	os.Exit(2)
 }
 
-func cleanup(client *girc.Client) {
+func cleanup() {
 	for name, _ := range namedPipes {
 		err := removeListener(name)
 		if err != nil {
@@ -416,7 +416,7 @@ func addHandlers(client *girc.Client) {
 		}
 	})
 	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
-		cleanup(c)
+		cleanup()
 	})
 
 	client.Handlers.Add(girc.JOIN, handleJoin)
@@ -459,7 +459,7 @@ func main() {
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 	go func() {
 		<-sig
-		cleanup(client)
+		cleanup()
 		os.Exit(1)
 	}()
 
