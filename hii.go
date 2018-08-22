@@ -32,7 +32,7 @@ const (
 	infn  = "in"
 )
 
-var channels = make(map[string]string)
+var namedPipes = make(map[string]string)
 
 var (
 	server     string
@@ -70,8 +70,8 @@ func usage() {
 }
 
 func cleanup(client *girc.Client) {
-	for name, _ := range channels {
-		err := removeChannel(client, name)
+	for name, _ := range namedPipes {
+		err := removeListener(name)
 		if err != nil {
 			log.Printf("Couldn't remove channel %q\n", name)
 		}
@@ -226,10 +226,10 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
-func createChannel(client *girc.Client, name string) error {
-	_, ok := channels[name]
+func createListener(client *girc.Client, name string) error {
+	_, ok := namedPipes[name]
 	if ok {
-		log.Println("Client already joined channel %q", name)
+		log.Println("Listener for %q already exists", name)
 		return nil
 	}
 
@@ -239,19 +239,19 @@ func createChannel(client *girc.Client, name string) error {
 		return err
 	}
 
-	channels[name] = filepath.Join(dir, infn)
+	namedPipes[name] = filepath.Join(dir, infn)
 	go recvInput(client, name)
 
 	return nil
 }
 
-func removeChannel(client *girc.Client, name string) error {
-	fp, ok := channels[name]
+func removeListener(name string) error {
+	fp, ok := namedPipes[name]
 	if !ok {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
 
-	delete(channels, name)
+	delete(namedPipes, name)
 	return os.Remove(fp)
 }
 
@@ -260,7 +260,7 @@ func joinChannel(client *girc.Client, name string) error {
 		return fmt.Errorf("%q is not a valid channel name", name)
 	}
 
-	return createChannel(client, name)
+	return createListener(client, name)
 }
 
 func handleInput(client *girc.Client, name, input string) error {
@@ -285,7 +285,7 @@ func handleInput(client *girc.Client, name, input string) error {
 
 func recvInput(client *girc.Client, name string) {
 	for {
-		fp, ok := channels[name]
+		fp, ok := namedPipes[name]
 		if !ok {
 			break
 		}
@@ -351,7 +351,7 @@ func handlePart(client *girc.Client, event girc.Event) {
 	}
 	name := event.Params[0]
 
-	err := removeChannel(client, name)
+	err := removeListener(name)
 	if err != nil {
 		log.Printf("Couldn't remove channel %q after part\n", name)
 	}
@@ -363,7 +363,7 @@ func handleKick(client *girc.Client, event girc.Event) {
 	}
 	name := event.Params[0]
 
-	err := removeChannel(client, name)
+	err := removeListener(name)
 	if err != nil {
 		log.Printf("Couldn't remove channel %q after kick\n", name)
 	}
@@ -381,8 +381,8 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		name := event.Source.Name
 		dir = filepath.Join(dir, normalize(name))
 
-		// createChannel only creates a channel if it doesn't exist.
-		err := createChannel(client, name)
+		// createListener only creates a channel if it doesn't exist.
+		err := createListener(client, name)
 		if err != nil {
 			log.Println("Couldn't create channel %q", name)
 			return
@@ -413,7 +413,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		err := createChannel(c, "")
+		err := createListener(c, "")
 		if err != nil {
 			log.Fatal("Couldn't create master channel")
 		}
