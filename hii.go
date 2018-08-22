@@ -335,7 +335,7 @@ func fmtEvent(event *girc.Event) (string, bool) {
 }
 
 func handleJoin(client *girc.Client, event girc.Event) {
-	if event.Source.Name != client.GetNick() {
+	if event.Source.Name != client.GetNick() || len(event.Params) < 1 {
 		return
 	}
 	name := event.Params[0]
@@ -348,11 +348,7 @@ func handleJoin(client *girc.Client, event girc.Event) {
 }
 
 func handlePart(client *girc.Client, event girc.Event) {
-	if event.Source.Name != client.GetNick() {
-		return
-	}
-
-	if len(event.Params) < 1 {
+	if event.Source.Name != client.GetNick() || len(event.Params) < 1 {
 		return
 	}
 	name := event.Params[0]
