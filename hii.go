@@ -255,14 +255,6 @@ func removeListener(name string) error {
 	return os.Remove(fp)
 }
 
-func joinChannel(client *girc.Client, name string) error {
-	if !girc.IsValidChannel(name) {
-		return fmt.Errorf("%q is not a valid channel name", name)
-	}
-
-	return createListener(client, name)
-}
-
 func handleInput(client *girc.Client, name, input string) error {
 	if input == "" {
 		return nil
@@ -338,7 +330,7 @@ func handleJoin(client *girc.Client, event girc.Event) {
 	}
 	name := event.Params[0]
 
-	err := joinChannel(client, name)
+	err := createListener(client, name)
 	if err != nil {
 		log.Printf("Couldn't join channel %q: %s\n", name, err)
 		client.Cmd.Part(name)
