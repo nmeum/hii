@@ -161,12 +161,16 @@ func normalize(name string) string {
 
 // Like os.OpenFile but for FIFOs.
 func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
-	_, err := os.Stat(name)
+	fi, err := os.Lstat(name)
 	if os.IsNotExist(err) {
 		err = syscall.Mkfifo(name, syscall.S_IFIFO|uint32(perm))
 		if err != nil {
 			return nil, err
 		}
+	} else if err != nil {
+		return nil, err
+	} else if fi.Mode()&os.ModeNamedPipe == 0 {
+		return nil, fmt.Errorf("%q is not a named pipe", name)
 	}
 
 	fifo, err := os.OpenFile(name, flag, perm)
