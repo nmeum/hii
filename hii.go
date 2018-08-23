@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
 	"unicode"
 
 	"github.com/lrstanley/girc"
@@ -195,22 +194,6 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 	return nil
 }
 
-func runHandlers(client *girc.Client, cmd, tr string, params ...string) {
-	clientSource := &girc.Source{
-		client.GetNick(),
-		client.GetIdent(),
-		client.GetHost(),
-	}
-
-	client.RunHandlers(&girc.Event{
-		Source:    clientSource,
-		Timestamp: time.Now(),
-		Command:   cmd,
-		Params:    params,
-		Trailing:  tr,
-	})
-}
-
 func getCmdChan(event *girc.Event) (string, bool) {
 	idx, ok := channelCmds[event.Command]
 	if !ok || len(event.Params) < idx+1 {
@@ -257,23 +240,27 @@ func removeListener(name string) error {
 func handleInput(client *girc.Client, name, input string) error {
 	if input == "" {
 		return nil
-	}
-
-	if input[0] != '/' {
-		// TODO: Same handling for `echo '/PRIVMSG #hii :foo' >in`
-
-		// Make sure that our msg is also recorded in the `out` log.
-		runHandlers(client, girc.PRIVMSG, input, name)
-
-		client.Cmd.Message(name, input)
-		return nil
+	} else if input[0] != '/' {
+		input = fmt.Sprintf("/%s %s :%s", girc.PRIVMSG, name, input)
 	}
 
 	if len(input) <= 1 {
 		return nil
 	}
 
-	return client.Cmd.SendRaw(input[1:] + "\r\n")
+	input = input[1:]
+	if strings.HasPrefix(input, girc.PRIVMSG) {
+		source := client.GetNick()
+
+		event := girc.ParseEvent(fmt.Sprintf(":%s %s", source, input))
+		if event == nil {
+			return nil
+		}
+
+		client.RunHandlers(event)
+	}
+
+	return client.Cmd.SendRaw(input + "\r\n")
 }
 
 func recvInput(client *girc.Client, name string) {
