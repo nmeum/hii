@@ -210,7 +210,6 @@ func getCmdChan(event *girc.Event) (string, bool) {
 func createListener(client *girc.Client, name string) error {
 	_, ok := namedPipes[name]
 	if ok {
-		log.Println("Listener for %q already exists", name)
 		return nil
 	}
 
