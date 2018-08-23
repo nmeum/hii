@@ -24,6 +24,7 @@ import (
 // TODO: Detect PING timeout and quit (suspend laptop to reproduce this)
 // TODO: Figure out a way to create new in FIFOs for queries
 // TODO: Handle away and nick message properly
+// TODO: Disable girc tracking to sparse some memory
 
 var ircPath string
 
