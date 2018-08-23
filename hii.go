@@ -448,6 +448,7 @@ func main() {
 		SSL:       useTLS,
 		TLSConfig: tlsconf,
 	})
+	addHandlers(client)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
@@ -457,8 +458,8 @@ func main() {
 		os.Exit(1)
 	}()
 
-	addHandlers(client)
 	err = client.Connect()
+	cleanup()
 	if err != nil {
 		log.Fatal(err)
 	}
