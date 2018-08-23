@@ -299,9 +299,9 @@ func fmtEvent(event *girc.Event) (string, bool) {
 		return "", false
 	}
 
-	if len(event.Params) >= 1 && girc.IsValidChannel(event.Params[0]) {
-		// Strip the channel from the output string since this
-		// information is already encoded in the file path.
+	if event.IsFromChannel() || event.IsFromUser() {
+		// Strip the user/channel name from the output string
+		// since this information is already encoded in the path.
 
 		prefix := fmt.Sprintf("[%s] ", event.Params[0])
 		out = strings.TrimPrefix(out, prefix)
