@@ -259,6 +259,8 @@ func handleInput(client *girc.Client, name, input string) error {
 	}
 
 	if input[0] != '/' {
+		// TODO: Same handling for `echo '/PRIVMSG #hii :foo' >in`
+
 		// Make sure that our msg is also recorded in the `out` log.
 		runHandlers(client, girc.PRIVMSG, input, name)
 
