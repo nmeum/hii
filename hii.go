@@ -31,7 +31,11 @@ const (
 	infn  = "in"
 )
 
-var namedPipes = make(map[string]string)
+type ircDir struct {
+	infp string
+}
+
+var ircDirs = make(map[string]ircDir)
 
 var (
 	server     string
@@ -69,7 +73,7 @@ func usage() {
 }
 
 func cleanup() {
-	for name, _ := range namedPipes {
+	for name, _ := range ircDirs {
 		err := removeListener(name)
 		if err != nil {
 			log.Printf("Couldn't remove channel %q\n", name)
@@ -212,7 +216,7 @@ func getCmdChan(event *girc.Event) (string, bool) {
 }
 
 func createListener(client *girc.Client, name string) error {
-	_, ok := namedPipes[name]
+	_, ok := ircDirs[name]
 	if ok {
 		return nil
 	}
@@ -223,20 +227,23 @@ func createListener(client *girc.Client, name string) error {
 		return err
 	}
 
-	namedPipes[name] = filepath.Join(dir, infn)
+	ircDirs[name] = ircDir{
+		filepath.Join(dir, infn),
+	}
+
 	go recvInput(client, name)
 
 	return nil
 }
 
 func removeListener(name string) error {
-	fp, ok := namedPipes[name]
+	dir, ok := ircDirs[name]
 	if !ok {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
+	defer delete(ircDirs, name)
 
-	delete(namedPipes, name)
-	return os.Remove(fp)
+	return os.Remove(dir.infp)
 }
 
 func handleInput(client *girc.Client, name, input string) error {
@@ -267,12 +274,12 @@ func handleInput(client *girc.Client, name, input string) error {
 
 func recvInput(client *girc.Client, name string) {
 	for {
-		fp, ok := namedPipes[name]
+		dir, ok := ircDirs[name]
 		if !ok {
 			break
 		}
 
-		fifo, err := openFifo(fp, os.O_RDONLY, 0600)
+		fifo, err := openFifo(dir.infp, os.O_RDONLY, 0600)
 		if err == io.EOF {
 			break
 		} else if err != nil {
