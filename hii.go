@@ -370,7 +370,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		// createListener only creates a channel if it doesn't exist.
 		err := createListener(client, name)
 		if err != nil {
-			log.Println("Couldn't create channel %q", name)
+			log.Printf("Couldn't create channel %q\n", name)
 			return
 		}
 	} else {
