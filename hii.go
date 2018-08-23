@@ -21,7 +21,6 @@ import (
 )
 
 // TODO: Detect PING timeout and quit (suspend laptop to reproduce this)
-// TODO: Figure out a way to create new in FIFOs for queries
 // TODO: Handle away and nick message properly
 // TODO: Disable girc tracking to sparse some memory
 
@@ -359,6 +358,10 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		dir = filepath.Join(dir, normalize(event.Params[0]))
 	} else if event.IsFromUser() {
 		name := event.Source.Name
+		if name == client.GetNick() {
+			name = event.Params[0] // IsFromUser checks len
+		}
+
 		dir = filepath.Join(dir, normalize(name))
 
 		// createListener only creates a channel if it doesn't exist.
