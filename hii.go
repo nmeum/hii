@@ -372,14 +372,13 @@ func handleMsg(client *girc.Client, event girc.Event) {
 			name = event.Params[0] // IsFromUser checks len
 		}
 
-		dir = filepath.Join(dir, normalize(name))
-
-		// createListener only creates a channel if it doesn't exist.
 		err := createListener(client, name)
 		if err != nil {
 			log.Printf("Couldn't create channel %q\n", name)
 			return
 		}
+
+		dir = filepath.Join(dir, normalize(name))
 	} else {
 		channel, isChanCmd := getCmdChan(&event)
 		if isChanCmd {
