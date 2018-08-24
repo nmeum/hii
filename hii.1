@@ -26,8 +26,9 @@ but offers more features, e.g. built-in TLS support.
 Just as
 .Xr ii 1
 .Nm
-creates a directory tree for the server containing subdirectory for
-every channel joined and private conversation started on that server.
+creates a directory tree for the server containing subdirectories for
+every conversation started on that server.
+This includes public IRC channels and private conversations with other users.
 The following files are created in each directory:
 .Pp
 .Bl -tag -width "-nosplitX" -offset indent -compact
@@ -64,6 +65,10 @@ Alternatively, subdirectory are also created when the user joins a
 channel manually by writing an IRC join message to the
 .Pa in
 .Xr fifo 7 .
+Subdirectories for private conversations with other users are created as
+soon as a
+.Em PRIVMSG
+is send or received directly from a user.
 .Pp
 .Nm
 makes no attempt to reestablish the connection, it simply terminates
