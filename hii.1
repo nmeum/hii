@@ -33,9 +33,7 @@ The following files are created in each directory:
 .Pp
 .Bl -tag -width "-nosplitX" -offset indent -compact
 .It Pa in
-A
-.Xr fifo 7
-which can be used to write messages to the IRC server.
+A FIFO which can be used to write messages to the IRC server.
 If the messages is prefixed with a backslash it is transmitted as a raw
 IRC message, otherwise a
 .Em PRIVMSG
@@ -64,7 +62,7 @@ for each channel.
 Alternatively, subdirectory are also created when the user joins a
 channel manually by writing an IRC join message to the
 .Pa in
-.Xr fifo 7 .
+FIFO.
 Subdirectories for private conversations with other users are created as
 soon as a
 .Em PRIVMSG
