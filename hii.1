@@ -50,6 +50,19 @@ represented by the subdirectory.
 This file is not removed on program termination.
 .El
 .Pp
+Additionally, the following files are created in directories
+representing public IRC channels:
+.Pp
+.Bl -tag -width "-nosplitX" -offset indent -compact
+.It Pa usr
+A UNIX domain socket which reports the nick names of all users currently
+connected to the channel. Nick names are separated by a newline and
+written unordered to the socket. The socket is closed by
+.Nm
+as soon as all nick names haven been written to it. Additionally, it is
+removed entirely as soon as the program terminates.
+.El
+.Pp
 On startup
 .Nm
 attempts to connect to the given
