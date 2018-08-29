@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -32,6 +31,7 @@ const (
 )
 
 type ircDir struct {
+	done chan bool
 	infp string
 }
 
@@ -228,6 +228,7 @@ func createListener(client *girc.Client, name string) error {
 	}
 
 	ircDirs[name] = ircDir{
+		make(chan bool, 1),
 		filepath.Join(dir, infn),
 	}
 
@@ -242,6 +243,14 @@ func removeListener(name string) error {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
 	defer delete(ircDirs, name)
+
+	// hack to gracefully terminate the recvInput goroutine
+	dir.done <- true
+	fifo, err := openFifo(dir.infp, os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	fifo.Close()
 
 	return os.Remove(dir.infp)
 }
@@ -273,33 +282,32 @@ func handleInput(client *girc.Client, name, input string) error {
 }
 
 func recvInput(client *girc.Client, name string) {
+	infp := ircDirs[name].infp
 	for {
-		dir, ok := ircDirs[name]
-		if !ok {
-			break
-		}
+		fifo, err := openFifo(infp, os.O_RDONLY, 0600)
+		select {
+		case <-ircDirs[name].done:
+			return
+		default:
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		fifo, err := openFifo(dir.infp, os.O_RDONLY, 0600)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal(err)
-		}
+			scanner := bufio.NewScanner(fifo)
+			for scanner.Scan() {
+				err = handleInput(client, name, scanner.Text())
+				if err != nil {
+					log.Println(err)
+				}
+			}
 
-		scanner := bufio.NewScanner(fifo)
-		for scanner.Scan() {
-			err = handleInput(client, name, scanner.Text())
+			err = scanner.Err()
 			if err != nil {
 				log.Println(err)
 			}
-		}
 
-		err = scanner.Err()
-		if err != nil {
-			log.Println(err)
+			fifo.Close()
 		}
-
-		fifo.Close()
 	}
 }
 
