@@ -243,7 +243,7 @@ func createListener(client *girc.Client, name string) error {
 	}
 	ircDirs[name] = idir
 
-	go recvInput(client, name)
+	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
 		ch := &ircChan{
 			make(chan bool, 1),
@@ -311,12 +311,11 @@ func handleInput(client *girc.Client, name, input string) error {
 	return client.Cmd.SendRaw(input + "\r\n")
 }
 
-func recvInput(client *girc.Client, name string) {
-	infp := ircDirs[name].infp
+func recvInput(client *girc.Client, name string, dir *ircDir) {
 	for {
-		fifo, err := openFifo(infp, os.O_RDONLY, 0600)
+		fifo, err := openFifo(dir.infp, os.O_RDONLY, 0600)
 		select {
-		case <-ircDirs[name].done:
+		case <-dir.done:
 			return
 		default:
 			if err != nil {
