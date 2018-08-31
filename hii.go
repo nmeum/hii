@@ -76,7 +76,7 @@ func cleanup() {
 	for name, _ := range ircDirs {
 		err := removeListener(name)
 		if err != nil {
-			log.Printf("Couldn't remove channel %q\n", name)
+			log.Printf("Couldn't remove %q\n", name)
 		}
 	}
 }
@@ -322,27 +322,31 @@ func fmtEvent(event *girc.Event) (string, bool) {
 }
 
 func handleJoin(client *girc.Client, event girc.Event) {
-	if event.Source.Name != client.GetNick() || len(event.Params) < 1 {
+	if len(event.Params) < 1 || event.Source == nil {
 		return
 	}
 	name := event.Params[0]
 
-	err := createListener(client, name)
-	if err != nil {
-		log.Printf("Couldn't join channel %q: %s\n", name, err)
-		client.Cmd.Part(name)
+	if event.Source.Name == client.GetNick() {
+		err := createListener(client, name)
+		if err != nil {
+			log.Printf("Couldn't join channel %q: %s\n", name, err)
+			client.Cmd.Part(name)
+		}
 	}
 }
 
 func handlePart(client *girc.Client, event girc.Event) {
-	if event.Source.Name != client.GetNick() || len(event.Params) < 1 {
+	if len(event.Params) < 1 || event.Source == nil {
 		return
 	}
 	name := event.Params[0]
 
-	err := removeListener(name)
-	if err != nil {
-		log.Printf("Couldn't remove channel %q after part\n", name)
+	if event.Source.Name == client.GetNick() {
+		err := removeListener(name)
+		if err != nil {
+			log.Printf("Couldn't remove %q after part\n", name)
+		}
 	}
 }
 
@@ -354,7 +358,7 @@ func handleKick(client *girc.Client, event girc.Event) {
 
 	err := removeListener(name)
 	if err != nil {
-		log.Printf("Couldn't remove channel %q after kick\n", name)
+		log.Printf("Couldn't remove %q after kick\n", name)
 	}
 }
 
@@ -374,7 +378,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 		err := createListener(client, name)
 		if err != nil {
-			log.Printf("Couldn't create channel %q\n", name)
+			log.Printf("Couldn't create %q\n", name)
 			return
 		}
 
