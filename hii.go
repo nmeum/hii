@@ -76,7 +76,7 @@ func cleanup() {
 	for name, _ := range ircDirs {
 		err := removeListener(name)
 		if err != nil {
-			log.Printf("Couldn't remove %q\n", name)
+			log.Printf("Couldn't remove %q: %s\n", name, err)
 		}
 	}
 }
@@ -345,7 +345,7 @@ func handlePart(client *girc.Client, event girc.Event) {
 	if event.Source.Name == client.GetNick() {
 		err := removeListener(name)
 		if err != nil {
-			log.Printf("Couldn't remove %q after part\n", name)
+			log.Printf("Couldn't remove %q after part: %s\n", name, err)
 		}
 	}
 }
@@ -358,7 +358,7 @@ func handleKick(client *girc.Client, event girc.Event) {
 
 	err := removeListener(name)
 	if err != nil {
-		log.Printf("Couldn't remove %q after kick\n", name)
+		log.Printf("Couldn't remove %q after kick: %s\n", name, err)
 	}
 }
 
@@ -378,7 +378,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 		err := createListener(client, name)
 		if err != nil {
-			log.Printf("Couldn't create %q\n", name)
+			log.Printf("Couldn't create %q: %s\n", name, err)
 			return
 		}
 
