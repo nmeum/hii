@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"os/user"
@@ -26,16 +27,24 @@ import (
 var ircPath string
 
 const (
-	outfn = "out"
-	infn  = "in"
+	nickfn = "usr"
+	outfn  = "out"
+	infn   = "in"
 )
+
+type ircChan struct {
+	done   chan bool
+	nickfp string
+	ln     net.Listener
+}
 
 type ircDir struct {
 	done chan bool
 	infp string
+	ch   *ircChan
 }
 
-var ircDirs = make(map[string]ircDir)
+var ircDirs = make(map[string]*ircDir)
 
 var (
 	server     string
@@ -227,12 +236,24 @@ func createListener(client *girc.Client, name string) error {
 		return err
 	}
 
-	ircDirs[name] = ircDir{
+	idir := &ircDir{
 		make(chan bool, 1),
 		filepath.Join(dir, infn),
+		nil,
 	}
+	ircDirs[name] = idir
 
 	go recvInput(client, name)
+	if girc.IsValidChannel(name) {
+		ch := &ircChan{
+			make(chan bool, 1),
+			filepath.Join(dir, nickfn),
+			nil,
+		}
+
+		idir.ch = ch
+		go serveNicks(client, name, ch)
+	}
 
 	return nil
 }
@@ -251,6 +272,15 @@ func removeListener(name string) error {
 		return err
 	}
 	fifo.Close()
+
+	ch := dir.ch
+	if ch != nil {
+		ch.done <- true
+		err := ch.ln.Close()
+		if err != nil {
+			return err
+		}
+	}
 
 	return os.Remove(dir.infp)
 }
@@ -311,6 +341,39 @@ func recvInput(client *girc.Client, name string) {
 	}
 }
 
+func serveNicks(client *girc.Client, name string, ch *ircChan) {
+	var err error
+
+	ch.ln, err = net.Listen("unix", ch.nickfp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		conn, err := ch.ln.Accept()
+		select {
+		case <-ch.done:
+			return
+		default:
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			ch := client.LookupChannel(name)
+			if ch != nil {
+				users := strings.Join(ch.UserList, "\n")
+				_, err = conn.Write([]byte(users + "\n"))
+				if err != nil {
+					log.Println(err)
+				}
+			}
+
+			conn.Close()
+		}
+	}
+}
+
 func fmtEvent(event *girc.Event) (string, bool) {
 	out, ok := event.Pretty()
 	if !ok {
@@ -338,7 +401,7 @@ func handleJoin(client *girc.Client, event girc.Event) {
 	if event.Source.Name == client.GetNick() {
 		err := createListener(client, name)
 		if err != nil {
-			log.Printf("Couldn't join channel %q: %s\n", name, err)
+			log.Printf("Couldn't join %q: %s\n", name, err)
 			client.Cmd.Part(name)
 		}
 	}
