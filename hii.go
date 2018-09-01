@@ -460,14 +460,14 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		}
 	}
 
-	err := os.MkdirAll(dir, 0700)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	out, ok := fmtEvent(&event)
 	if !ok {
 		return
+	}
+
+	err := os.MkdirAll(dir, 0700)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	outfp := filepath.Join(dir, outfn)
