@@ -16,7 +16,7 @@ achieve memory safety while at it.
 This is work in progress. Some of the features I intended to add to ii
 are already implemented, others aren't. Besides, I am currently not
 using this myself since I didn't finish work on the frontend yet, thus
-the code is like full of bugs and very unstable.
+the code is likely full of bugs and very unstable.
 
 ## Features
 
