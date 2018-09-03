@@ -57,7 +57,7 @@ representing public IRC channels:
 .It Pa usr
 A UNIX domain socket which reports the nick names of all users currently
 connected to the channel. Nick names are separated by a newline and
-written unordered to the socket. The socket is closed by
+written in alphabetic order to the socket. The socket is closed by
 .Nm
 as soon as all nick names haven been written to it. Additionally, it is
 removed entirely as soon as the program terminates.
