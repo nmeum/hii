@@ -267,7 +267,7 @@ func removeListener(name string) error {
 
 	// hack to gracefully terminate the recvInput goroutine
 	dir.done <- true
-	fifo, err := openFifo(dir.infp, os.O_WRONLY, 0600)
+	fifo, err := openFifo(dir.infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
 	if err != nil {
 		return err
 	}
