@@ -21,7 +21,6 @@ import (
 )
 
 // TODO: Detect PING timeout and quit (suspend laptop to reproduce this)
-// TODO: Handle away and nick message properly
 // TODO: Disable girc tracking to sparse some memory
 
 var ircPath string
@@ -224,6 +223,31 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
+func handleMultiChan(client *girc.Client, event *girc.Event) bool {
+	if event.Command != girc.NICK && event.Command != girc.QUIT {
+		return false
+	}
+
+	user := client.LookupUser(event.Source.Name)
+	if user == nil {
+		return false
+	}
+
+	for name, dir := range ircDirs {
+		if name == "" || dir.ch == nil || !user.InChannel(name) {
+			continue
+		}
+
+		fp := filepath.Join(ircPath, normalize(name))
+		err := writeEvent(event, fp)
+		if err != nil {
+			log.Println("Couldn't write msg to %q: %s\n", name, err)
+		}
+	}
+
+	return true
+}
+
 func createListener(client *girc.Client, name string) error {
 	_, ok := ircDirs[name]
 	if ok {
@@ -391,6 +415,21 @@ func fmtEvent(event *girc.Event) (string, bool) {
 	return out, true
 }
 
+func writeEvent(event *girc.Event, dir string) error {
+	out, ok := fmtEvent(event)
+	if !ok {
+		return nil
+	}
+
+	err := os.MkdirAll(dir, 0700)
+	if err != nil {
+		return err
+	}
+
+	outfp := filepath.Join(dir, outfn)
+	return appendFile(outfp, []byte(out), 0600)
+}
+
 func handleJoin(client *girc.Client, event girc.Event) {
 	if len(event.Params) < 1 || event.Source == nil {
 		return
@@ -433,7 +472,9 @@ func handleKick(client *girc.Client, event girc.Event) {
 }
 
 func handleMsg(client *girc.Client, event girc.Event) {
-	if event.Source == nil {
+	if event.Source == nil || event.Command == girc.AWAY {
+		return
+	} else if handleMultiChan(client, &event) {
 		return
 	}
 
@@ -460,20 +501,9 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		}
 	}
 
-	out, ok := fmtEvent(&event)
-	if !ok {
-		return
-	}
-
-	err := os.MkdirAll(dir, 0700)
+	err := writeEvent(&event, dir)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	outfp := filepath.Join(dir, outfn)
-	err = appendFile(outfp, []byte(out), 0600)
-	if err != nil {
-		log.Printf("Couldn't write to %q: %s\n", outfp, err)
 	}
 }
 
