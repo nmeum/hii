@@ -223,14 +223,10 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
-func handleMultiChan(client *girc.Client, event *girc.Event) bool {
-	if event.Command != girc.NICK && event.Command != girc.QUIT {
-		return false
-	}
-
+func handleMultiChan(client *girc.Client, event *girc.Event) error {
 	user := client.LookupUser(event.Source.Name)
 	if user == nil {
-		return false
+		return fmt.Errorf("user %q doesn't exist", event.Source.Name)
 	}
 
 	for name, dir := range ircDirs {
@@ -245,7 +241,7 @@ func handleMultiChan(client *girc.Client, event *girc.Event) bool {
 		}
 	}
 
-	return true
+	return nil
 }
 
 func createListener(client *girc.Client, name string) error {
@@ -472,9 +468,18 @@ func handleKick(client *girc.Client, event girc.Event) {
 }
 
 func handleMsg(client *girc.Client, event girc.Event) {
-	if event.Source == nil || event.Command == girc.AWAY {
+	if event.Source == nil {
 		return
-	} else if handleMultiChan(client, &event) {
+	}
+
+	switch event.Command {
+	case girc.AWAY:
+		return
+	case girc.QUIT, girc.NICK:
+		err := handleMultiChan(client, &event)
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
