@@ -223,6 +223,32 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
+func getChanDir(client *girc.Client, event *girc.Event) (string, error) {
+	dir := ircPath
+	if event.IsFromChannel() {
+		dir = filepath.Join(dir, normalize(event.Params[0]))
+	} else if event.IsFromUser() {
+		name := event.Source.Name
+		if name == client.GetNick() {
+			name = event.Params[0] // IsFromUser checks len
+		}
+
+		err := createListener(client, name)
+		if err != nil {
+			return "", err
+		}
+
+		dir = filepath.Join(dir, normalize(name))
+	} else {
+		channel, isChanCmd := getCmdChan(event)
+		if isChanCmd {
+			dir = filepath.Join(dir, normalize(channel))
+		}
+	}
+
+	return dir, nil
+}
+
 func handleMultiChan(client *girc.Client, event *girc.Event) error {
 	user := client.LookupUser(event.Source.Name)
 	if user == nil {
@@ -474,41 +500,22 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 	switch event.Command {
 	case girc.AWAY:
-		return
+		// Ignore, occurs to often.
 	case girc.QUIT, girc.NICK:
 		err := handleMultiChan(client, &event)
 		if err != nil {
 			log.Fatal(err)
 		}
-		return
-	}
-
-	dir := ircPath
-	if event.IsFromChannel() {
-		dir = filepath.Join(dir, normalize(event.Params[0]))
-	} else if event.IsFromUser() {
-		name := event.Source.Name
-		if name == client.GetNick() {
-			name = event.Params[0] // IsFromUser checks len
-		}
-
-		err := createListener(client, name)
+	default:
+		dir, err := getChanDir(client, &event)
 		if err != nil {
-			log.Printf("Couldn't create %q: %s\n", name, err)
-			return
+			log.Fatal(err)
 		}
 
-		dir = filepath.Join(dir, normalize(name))
-	} else {
-		channel, isChanCmd := getCmdChan(&event)
-		if isChanCmd {
-			dir = filepath.Join(dir, normalize(channel))
+		err = writeEvent(&event, dir)
+		if err != nil {
+			log.Fatal(err)
 		}
-	}
-
-	err := writeEvent(&event, dir)
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 
