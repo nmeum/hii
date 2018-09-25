@@ -14,6 +14,7 @@
 .Op Fl n Ar nick
 .Op Fl p Ar port
 .Op Fl t
+.Op Fl d
 .Ar server
 .Op Ar channel ...
 .Sh DESCRIPTION
@@ -126,6 +127,8 @@ TCP port used to connect to the IRC server.
 Defaults to 6667.
 .It Fl t
 Enables TLS, which is disabled by default.
+.It Fl d
+Write debug messages to standard output.
 .El
 .Sh EXAMPLES
 Connect to hackint and join the

@@ -57,6 +57,7 @@ var (
 	nick       string
 	port       int
 	useTLS     bool
+	debug      bool
 )
 
 var mntRegex *regexp.Regexp
@@ -110,6 +111,7 @@ func parseFlags() {
 	flag.StringVar(&nick, "n", user.Username, "nick")
 	flag.IntVar(&port, "p", 6667, "TCP port")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
+	flag.BoolVar(&debug, "d", false, "enable debug output")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -586,14 +588,19 @@ func main() {
 		}
 	}
 
-	client := girc.New(girc.Config{
+	config := girc.Config{
 		Server:    server,
 		Port:      port,
 		Nick:      nick,
 		User:      name,
 		SSL:       useTLS,
 		TLSConfig: tlsconf,
-	})
+	}
+	if debug {
+		config.Debug = os.Stdout
+	}
+
+	client := girc.New(config)
 	addHandlers(client)
 
 	sig := make(chan os.Signal, 1)
