@@ -568,23 +568,13 @@ func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.ALL_EVENTS, handleMsg)
 }
 
-func main() {
-	log.SetFlags(log.Lshortfile)
-	parseFlags()
-
-	mntRegex = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(nick) + `\b`)
-
-	ircPath = filepath.Join(prefix, server)
-	err := os.MkdirAll(ircPath, 0700)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func newClient() (*girc.Client, error) {
+	var err error
 	var tlsconf *tls.Config
 	if useTLS {
 		tlsconf, err = getTLSconfig()
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 	}
 
@@ -602,6 +592,26 @@ func main() {
 
 	client := girc.New(config)
 	addHandlers(client)
+
+	return client, nil
+}
+
+func main() {
+	log.SetFlags(log.Lshortfile)
+	parseFlags()
+
+	mntRegex = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(nick) + `\b`)
+
+	ircPath = filepath.Join(prefix, server)
+	err := os.MkdirAll(ircPath, 0700)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client, err := newClient()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
