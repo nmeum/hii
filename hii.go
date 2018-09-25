@@ -107,6 +107,7 @@ func parseFlags() {
 	flag.IntVar(&port, "p", 6667, "TCP port")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 
+	flag.Usage = usage
 	flag.Parse()
 
 	if flag.NArg() < 1 {
@@ -544,8 +545,6 @@ func addHandlers(client *girc.Client) {
 
 func main() {
 	log.SetFlags(log.Lshortfile)
-
-	flag.Usage = usage
 	parseFlags()
 
 	ircPath = filepath.Join(prefix, server)
