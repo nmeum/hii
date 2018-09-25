@@ -101,7 +101,7 @@ func parseFlags() {
 	flag.StringVar(&clientKey, "k", "", "key for certFP")
 	flag.StringVar(&clientCert, "c", "", "cert for certFP")
 	flag.StringVar(&certs, "r", "", "root certificates")
-	flag.StringVar(&name, "f", user.Name, "real name")
+	flag.StringVar(&name, "f", user.Username, "real name")
 	flag.StringVar(&prefix, "i", filepath.Join(user.HomeDir, "irc"), "directory path")
 	flag.StringVar(&nick, "n", user.Username, "nick")
 	flag.IntVar(&port, "p", 6667, "TCP port")
