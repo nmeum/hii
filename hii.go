@@ -513,6 +513,8 @@ func handleKick(client *girc.Client, event girc.Event) {
 func handleMsg(client *girc.Client, event girc.Event) {
 	if event.Source == nil {
 		return
+	} else if debug {
+		fmt.Println(event.String())
 	}
 
 	switch event.Command {
@@ -585,9 +587,6 @@ func newClient() (*girc.Client, error) {
 		User:      name,
 		SSL:       useTLS,
 		TLSConfig: tlsconf,
-	}
-	if debug {
-		config.Debug = os.Stdout
 	}
 
 	client := girc.New(config)
