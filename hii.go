@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"unicode"
@@ -26,6 +27,7 @@ import (
 var ircPath string
 
 const (
+	mntfn  = "mnt"
 	nickfn = "usr"
 	outfn  = "out"
 	infn   = "in"
@@ -56,6 +58,8 @@ var (
 	port       int
 	useTLS     bool
 )
+
+var mntRegex *regexp.Regexp
 
 var channelCmds = map[string]int{
 	girc.JOIN:      0,
@@ -420,13 +424,13 @@ func serveNicks(client *girc.Client, name string, ch *ircChan) {
 	}
 }
 
-func fmtEvent(event *girc.Event) (string, bool) {
+func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 	out, ok := event.Pretty()
 	if !ok {
 		return "", false
 	}
 
-	if event.IsFromChannel() || event.IsFromUser() {
+	if strip && (event.IsFromChannel() || event.IsFromUser()) {
 		// Strip the user/channel name from the output string
 		// since this information is already encoded in the path.
 
@@ -438,8 +442,18 @@ func fmtEvent(event *girc.Event) (string, bool) {
 	return out, true
 }
 
+func writeMention(event *girc.Event) error {
+	out, ok := fmtEvent(event, false)
+	if !ok {
+		return nil
+	}
+
+	mntfp := filepath.Join(ircPath, mntfn)
+	return appendFile(mntfp, []byte(out), 0600)
+}
+
 func writeEvent(event *girc.Event, dir string) error {
-	out, ok := fmtEvent(event)
+	out, ok := fmtEvent(event, true)
 	if !ok {
 		return nil
 	}
@@ -501,22 +515,31 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 	switch event.Command {
 	case girc.AWAY:
-		// Ignore, occurs to often.
+		return // Ignore, occurs to often.
 	case girc.QUIT, girc.NICK:
 		err := handleMultiChan(client, &event)
 		if err != nil {
 			log.Fatal(err)
 		}
-	default:
-		dir, err := getChanDir(client, &event)
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		err = writeEvent(&event, dir)
-		if err != nil {
-			log.Fatal(err)
+		return // handleMultiChan writes the event
+	case girc.PRIVMSG:
+		if event.IsFromUser() || mntRegex.MatchString(event.Trailing) {
+			err := writeMention(&event)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
+	}
+
+	dir, err := getChanDir(client, &event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = writeEvent(&event, dir)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -546,6 +569,8 @@ func addHandlers(client *girc.Client) {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	parseFlags()
+
+	mntRegex = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(nick) + `\b`)
 
 	ircPath = filepath.Join(prefix, server)
 	err := os.MkdirAll(ircPath, 0700)

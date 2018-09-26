@@ -26,6 +26,7 @@ New features (compared to ii):
 * A proper IRC protocol implementation through [girc][girc repo]
 * Support for automatically joining channels on startup
 * Support for a per-channel nick list using a UNIX domain socket
+* Support for recording messages mentioning the users.
 * Built-in TLS support
 * Built-in IPv6 support
 
@@ -37,10 +38,6 @@ Features intentionally not implemented:
   [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
 * Shortcut commands, e.g. `/j`. If you need them write yourself a shell
   script for mapping shortcut commands to real commands.
-
-Planned features include:
-
-* Built-in support for selecting messages matching a given pattern
 
 While hii certainly has more features than ii it is still supposed to
 have a limit feature set and shouldn't ["expand until it can read mail"]
