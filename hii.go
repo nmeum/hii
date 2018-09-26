@@ -595,22 +595,31 @@ func newClient() (*girc.Client, error) {
 	return client, nil
 }
 
+func initDir() error {
+	ircPath = filepath.Join(prefix, server)
+	err := os.MkdirAll(ircPath, 0700)
+	if err != nil {
+		return err
+	}
+
+	_, err = os.OpenFile(filepath.Join(ircPath, logfn), os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 	parseFlags()
 
+	err := initDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	mntRegex = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(nick) + `\b`)
-
-	ircPath = filepath.Join(prefix, server)
-	err := os.MkdirAll(ircPath, 0700)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = os.OpenFile(filepath.Join(ircPath, logfn), os.O_CREATE, 0600)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	client, err := newClient()
 	if err != nil {
 		log.Fatal(err)
