@@ -52,13 +52,12 @@ This file is not removed on program termination.
 .Pp
 This also applies to the master channel, which is the parent directory
 of the subdirectories described above.
-This directory also contains a file named
+This directory additionally includes a file named
 .Pa mnt .
-This file records all received messages containing the user's name and
+This file contains all received messages containing the user's name and
 messages received through private conversations.
 .Pp
-Additionally, the following files are created in directories
-representing public IRC channels:
+Directories for public IRC channels also contain the following files:
 .Pp
 .Bl -tag -width "-nosplitX" -offset indent -compact
 .It Pa usr
@@ -79,24 +78,10 @@ attempts to connect to the given
 If a connection was established successful it automatically joins the
 given IRC
 .Ar channels
-(if any). A subdirectory containing the files described above is created
-for each channel.
-Alternatively, subdirectory are also created when the user joins a
-channel manually by writing an IRC join message to the
-.Pa in
-FIFO.
-Subdirectories for private conversations with other users are created as
-soon as a
-.Em PRIVMSG
-is send or received directly from a user.
-.Pp
+(if any).
 .Nm
 makes no attempt to reestablish the connection, it simply terminates
 when the connection to the IRC server is lost.
-Automatic reconnection can be achieved by starting
-.Nm
-through a service supervisor such as
-.Xr runsv 8 .
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
