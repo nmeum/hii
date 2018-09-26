@@ -27,7 +27,7 @@ import (
 var ircPath string
 
 const (
-	mntfn  = "mnt"
+	logfn  = "log"
 	nickfn = "usr"
 	outfn  = "out"
 	infn   = "in"
@@ -448,8 +448,8 @@ func writeMention(event *girc.Event) error {
 		return nil
 	}
 
-	mntfp := filepath.Join(ircPath, mntfn)
-	return appendFile(mntfp, []byte(out), 0600)
+	logfp := filepath.Join(ircPath, logfn)
+	return appendFile(logfp, []byte(out), 0600)
 }
 
 func writeEvent(event *girc.Event, dir string) error {
