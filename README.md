@@ -71,6 +71,33 @@ packing this software for a distribution, run the following commands:
 	$ make
 	$ make install
 
+## FAQ
+
+**Q:** Sockets cannot be used with standard utilities such as `grep(1)`.
+Why are nick names served using a unix domain socket anyhow?
+
+**A:** Several ways of implementing a nick list have been considered.
+Using a regular file has various obvious disadvantages. To name a few:
+The file would need to be truncated every time the nick list changes,
+doing so would cause a lot of file system operation and would require
+file locking. Using a FUSE for serving the nick list was also briefly
+considered, however, while this would allow interaction with standard
+utilities it would require linking against FUSE and would complicate
+things quite a bit. Serving nick using a unix domain socket seemed to be
+a reasonable compromise.
+
+**Q:** Why are mentions recorded in a separate file? Can't this be
+implemented using inotify, kqueue, … in the frontend?
+
+**A:** While this might certainly be possible it would complicate the
+frontend code quite a bit. Implementing this in the backend was fairly
+easy and only required a few changes. Additionally, neither kqueue nor
+inotify are mandated by POSIX.
+
+**Q:** Can feature X/Y/Z be added to hii?
+
+**A:** No.
+
 ## License
 
 This program is free software: you can redistribute it and/or modify it
