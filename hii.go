@@ -606,6 +606,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, err = os.OpenFile(filepath.Join(ircPath, logfn), os.O_CREATE, 0600)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	client, err := newClient()
 	if err != nil {
