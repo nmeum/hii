@@ -31,6 +31,7 @@ const (
 	nickfn = "usr"
 	outfn  = "out"
 	infn   = "in"
+	idfn   = "id"
 )
 
 type ircChan struct {
@@ -280,6 +281,32 @@ func handleMultiChan(client *girc.Client, event *girc.Event) error {
 	return nil
 }
 
+func storeName(dir, name string) error {
+	idfp := filepath.Join(dir, idfn)
+	file, err := os.OpenFile(idfp, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0200)
+	if err != nil {
+		if os.IsExist(err) {
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(name + "\n")
+	if err != nil {
+		os.Remove(idfp)
+		return err
+	}
+
+	err = file.Chmod(0400)
+	if err != nil {
+		os.Remove(idfp)
+		return err
+	}
+
+	return nil
+}
+
 func createListener(client *girc.Client, name string) error {
 	_, ok := ircDirs[name]
 	if ok {
@@ -290,6 +317,12 @@ func createListener(client *girc.Client, name string) error {
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
 		return err
+	}
+	if name != "" {
+		err = storeName(dir, name)
+		if err != nil {
+			return err
+		}
 	}
 
 	idir := &ircDir{

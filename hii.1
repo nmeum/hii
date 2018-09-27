@@ -49,6 +49,12 @@ human readable format.
 The file only contains IRC messages associated with the channel/user
 represented by the subdirectory.
 This file is not removed on program termination.
+.It Pa id
+A unique ID for identifying the conversation.
+For public IRC channels this is the unsanitized channel, for private
+conversation the unsanitized user name.
+This file does not exist for the master channel and is not removed on
+program termination.
 .El
 .Pp
 This also applies to the master channel, which is the parent directory
