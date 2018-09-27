@@ -171,7 +171,7 @@ func normalize(name string) string {
 		case r >= 'A' && r <= 'Z':
 			return unicode.ToLower(r)
 		default:
-			return -1
+			return '_'
 		}
 	}
 
