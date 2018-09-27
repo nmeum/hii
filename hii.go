@@ -558,7 +558,7 @@ func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
 		err := createListener(c, "")
 		if err != nil {
-			log.Fatal("Couldn't create master channel")
+			log.Fatalf("Couldn't create master channel: %s", err)
 		}
 
 		if flag.NArg() > 1 {
