@@ -30,6 +30,8 @@ Just as
 creates a directory tree for the server containing subdirectories for
 every conversation started on that server.
 This includes public IRC channels and private conversations with other users.
+These directories are subdirectories of a directory created for the IRC
+server itself, the so called master channel.
 The following files are created in each directory:
 .Pp
 .Bl -tag -width "-nosplitX" -offset indent -compact
@@ -57,9 +59,7 @@ This file does not exist for the master channel and is not removed on
 program termination.
 .El
 .Pp
-This also applies to the master channel, which is the parent directory
-of the subdirectories described above.
-This directory additionally includes a file named
+The master channel directory also include a file named
 .Pa log .
 This file contains all received messages containing the user's name and
 messages received through private conversations.
