@@ -60,7 +60,10 @@ var (
 	debug      bool
 )
 
-var mntRegex *regexp.Regexp
+var (
+	mntRegex *regexp.Regexp
+	logFile  *os.File
+)
 
 var channelCmds = map[string]int{
 	girc.JOIN:      0,
@@ -450,8 +453,12 @@ func writeMention(event *girc.Event) error {
 		return nil
 	}
 
-	logfp := filepath.Join(ircPath, logfn)
-	return appendFile(logfp, []byte(out), 0600)
+	_, err := logFile.WriteString(out)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func writeEvent(event *girc.Event, dir string) error {
@@ -602,7 +609,8 @@ func initDir() error {
 		return err
 	}
 
-	_, err = os.OpenFile(filepath.Join(ircPath, logfn), os.O_CREATE, 0600)
+	logFp := filepath.Join(ircPath, logfn)
+	logFile, err = os.OpenFile(logFp, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}
