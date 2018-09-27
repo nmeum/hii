@@ -147,3 +147,13 @@ tail -f ~/irc/chat.freenode.net/out
 .Xr tail 1
 .Sh AUTHORS
 .An Sören Tempel Aq Mt soeren@soeren-tempel.net
+.Sh BUGS
+.Nm
+has tight restrictions regarding directory names for both security and
+compatibility reasons.
+The problem with this being that directory names are not unique.
+For instance, joining a channel named
+.Em #foo|bar
+and a channel named
+.Em #foo/bar
+is not possible since they are assigned the same directory name.
