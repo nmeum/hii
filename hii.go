@@ -568,7 +568,8 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 		return // handleMultiChan writes the event
 	case girc.PRIVMSG:
-		if event.IsFromUser() || mntRegex.MatchString(event.Trailing) {
+		if event.IsFromUser() && event.Source.Name != client.GetNick() ||
+			mntRegex.MatchString(event.Trailing) {
 			err := writeMention(&event)
 			if err != nil {
 				log.Fatal(err)
