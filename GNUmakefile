@@ -6,7 +6,7 @@ MANDIR ?= $(PREFIX)/share/man
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 
 IMPORTPATH=src/github.com/nmeum/$(NAME)
-export GOPATH="$(CURDIR)"
+export GOPATH=$(CURDIR)
 
 $(NAME): $(IMPORTPATH)
 	cd $< && go build -o $@
