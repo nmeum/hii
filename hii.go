@@ -206,7 +206,7 @@ func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
 
 // Like ioutil.Write but doesn't truncate and appends instead.
 func appendFile(filename string, data []byte, perm os.FileMode) error {
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
 	if err != nil {
 		return err
 	}
