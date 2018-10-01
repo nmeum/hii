@@ -557,6 +557,13 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		fmt.Println(event.String())
 	}
 
+	// Proper handling for CTCPs is not implemented and will never
+	// be implemented. Therefore we just ignore CTCPs except `/me`.
+	isCtcp, ctcp := event.IsCTCP()
+	if isCtcp && ctcp.Command != girc.CTCP_ACTION {
+		return
+	}
+
 	switch event.Command {
 	case girc.AWAY:
 		return // Ignore, occurs to often.
