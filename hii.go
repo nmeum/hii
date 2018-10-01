@@ -566,7 +566,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 	switch event.Command {
 	case girc.AWAY:
-		return // Ignore, occurs to often.
+		return // Ignore, occurs too often.
 	case girc.QUIT, girc.NICK:
 		err := handleMultiChan(client, &event)
 		if err != nil {
