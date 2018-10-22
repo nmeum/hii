@@ -34,6 +34,8 @@ const (
 	idfn   = "id"
 )
 
+const masterChan = ""
+
 type ircChan struct {
 	done   chan bool
 	nickfp string
@@ -267,7 +269,7 @@ func handleMultiChan(client *girc.Client, event *girc.Event) error {
 	}
 
 	for name, dir := range ircDirs {
-		if name == "" || dir.ch == nil || !user.InChannel(name) {
+		if name == masterChan || dir.ch == nil || !user.InChannel(name) {
 			continue
 		}
 
@@ -318,7 +320,7 @@ func createListener(client *girc.Client, name string) error {
 	if err != nil {
 		return err
 	}
-	if name != "" {
+	if name != masterChan {
 		err = storeName(dir, name)
 		if err != nil {
 			return err
@@ -597,7 +599,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		err := createListener(c, "")
+		err := createListener(c, masterChan)
 		if err != nil {
 			log.Fatalf("Couldn't create master channel: %s", err)
 		}
