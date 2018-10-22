@@ -38,13 +38,13 @@ const masterChan = ""
 
 type ircChan struct {
 	done   chan bool
-	nickfp string
+	nickfp string // TODO: remove
 	ln     net.Listener
 }
 
 type ircDir struct {
 	done chan bool
-	infp string
+	fp   string
 	ch   *ircChan
 }
 
@@ -326,11 +326,7 @@ func createListener(client *girc.Client, name string) error {
 		}
 	}
 
-	idir := &ircDir{
-		make(chan bool, 1),
-		filepath.Join(dir, infn),
-		nil,
-	}
+	idir := &ircDir{make(chan bool, 1), dir, nil}
 	ircDirs[name] = idir
 
 	go recvInput(client, name, idir)
@@ -354,10 +350,11 @@ func removeListener(name string) error {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
 	defer delete(ircDirs, name)
+	infp := filepath.Join(dir.fp, infn)
 
 	// hack to gracefully terminate the recvInput goroutine
 	dir.done <- true
-	fifo, err := openFifo(dir.infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
+	fifo, err := openFifo(infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
 	if err != nil {
 		return err
 	}
@@ -372,7 +369,7 @@ func removeListener(name string) error {
 		}
 	}
 
-	return os.Remove(dir.infp)
+	return os.Remove(infp)
 }
 
 func handleInput(client *girc.Client, name, input string) error {
@@ -402,8 +399,9 @@ func handleInput(client *girc.Client, name, input string) error {
 }
 
 func recvInput(client *girc.Client, name string, dir *ircDir) {
+	infp := filepath.Join(dir.fp, infn)
 	for {
-		fifo, err := openFifo(dir.infp, os.O_RDONLY, 0600)
+		fifo, err := openFifo(infp, os.O_RDONLY, 0600)
 		select {
 		case <-dir.done:
 			return
