@@ -42,6 +42,7 @@ type ircChan struct {
 }
 
 type ircDir struct {
+	name string
 	done chan bool
 	fp   string
 	ch   *ircChan
@@ -91,10 +92,10 @@ func usage() {
 }
 
 func cleanup() {
-	for name, _ := range ircDirs {
-		err := removeListener(name)
+	for _, dir := range ircDirs {
+		err := removeListener(dir.name)
 		if err != nil {
-			log.Printf("Couldn't remove %q: %s\n", name, err)
+			log.Printf("Couldn't remove %q: %s\n", dir.name, err)
 		}
 	}
 }
@@ -249,9 +250,9 @@ func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 		return names, fmt.Errorf("user %q doesn't exist", event.Source.Name)
 	}
 
-	for name, dir := range ircDirs {
-		if dir.ch != nil && user.InChannel(name) {
-			names = append(names, &name)
+	for _, dir := range ircDirs {
+		if dir.ch != nil && user.InChannel(dir.name) {
+			names = append(names, &dir.name)
 		}
 	}
 
@@ -307,26 +308,21 @@ func storeName(dir, name string) error {
 	return nil
 }
 
-func createListener(client *girc.Client, name string) error {
-	_, ok := ircDirs[name]
-	if ok {
-		return nil
-	}
-
+func createListener(client *girc.Client, name string) (*ircDir, error) {
 	dir := filepath.Join(ircPath, normalize(name))
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if name != masterChan {
 		err = storeName(dir, name)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	idir := &ircDir{make(chan bool, 1), dir, nil}
-	ircDirs[name] = idir
+	idir := &ircDir{name, make(chan bool, 1), dir, nil}
+	ircDirs[normalize(name)] = idir
 
 	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
@@ -334,15 +330,17 @@ func createListener(client *girc.Client, name string) error {
 		go serveNicks(client, name, idir)
 	}
 
-	return nil
+	return idir, nil
 }
 
 func removeListener(name string) error {
-	dir, ok := ircDirs[name]
+	key := normalize(name)
+	dir, ok := ircDirs[key]
 	if !ok {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
-	defer delete(ircDirs, name)
+	defer delete(ircDirs, key)
+
 	infp := filepath.Join(dir.fp, infn)
 
 	// hack to gracefully terminate the recvInput goroutine
@@ -488,19 +486,27 @@ func writeMention(event *girc.Event) error {
 }
 
 func writeEvent(client *girc.Client, event *girc.Event, name string) error {
+	var err error
+
 	out, ok := fmtEvent(event, true)
 	if !ok {
 		return nil
 	}
 
-	dir := filepath.Join(ircPath, normalize(name))
-	err := createListener(client, name)
-	if err != nil {
-		return err
+	idir, ok := ircDirs[normalize(name)]
+	if ok && idir.name != name {
+		if event.IsFromChannel() {
+			client.Cmd.Part(name)
+		}
+		return fmt.Errorf("name clash (%s vs. %s)", idir.name, name)
+	} else if !ok {
+		idir, err = createListener(client, name)
+		if err != nil {
+			return err
+		}
 	}
 
-	// TODO: Store outfp in ircDir
-	outfp := filepath.Join(dir, outfn)
+	outfp := filepath.Join(idir.fp, outfn)
 	return appendFile(outfp, []byte(out), 0600)
 }
 
