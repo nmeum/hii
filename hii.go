@@ -272,12 +272,6 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 		if name == client.GetNick() {
 			name = event.Params[0]
 		}
-
-		// TODO: Do this in handleMsg
-		err := createListener(client, name)
-		if err != nil {
-			return []*string{}, err
-		}
 	} else {
 		channel, isChanCmd := getCmdChan(event)
 		if isChanCmd {
@@ -501,18 +495,19 @@ func writeMention(event *girc.Event) error {
 	return nil
 }
 
-func writeEvent(event *girc.Event, name string) error {
+func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 	out, ok := fmtEvent(event, true)
 	if !ok {
 		return nil
 	}
 
 	dir := filepath.Join(ircPath, normalize(name))
-	err := os.MkdirAll(dir, 0700)
+	err := createListener(client, name)
 	if err != nil {
 		return err
 	}
 
+	// TODO: Store outfp in ircDir
 	outfp := filepath.Join(dir, outfn)
 	return appendFile(outfp, []byte(out), 0600)
 }
@@ -590,7 +585,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	}
 
 	for _, name := range names {
-		err := writeEvent(&event, *name)
+		err := writeEvent(client, &event, *name)
 		if err != nil {
 			log.Println(err)
 		}
