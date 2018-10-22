@@ -222,6 +222,12 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 	return nil
 }
 
+func isMention(client *girc.Client, event *girc.Event) bool {
+	return event.IsFromUser() &&
+		event.Source.Name != client.GetNick() ||
+		mntRegex.MatchString(event.Trailing)
+}
+
 func getCmdChan(event *girc.Event) (string, bool) {
 	idx, ok := channelCmds[event.Command]
 	if !ok || len(event.Params) < idx+1 {
@@ -570,8 +576,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	case girc.AWAY:
 		return // Ignore, occurs too often.
 	case girc.PRIVMSG:
-		if event.IsFromUser() && event.Source.Name != client.GetNick() ||
-			mntRegex.MatchString(event.Trailing) {
+		if isMention(client, &event) {
 			err := writeMention(&event)
 			if err != nil {
 				log.Fatal(err)
