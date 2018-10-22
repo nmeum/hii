@@ -579,11 +579,6 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		err := createListener(c, masterChan)
-		if err != nil {
-			log.Fatalf("Couldn't create master channel: %s", err)
-		}
-
 		if flag.NArg() > 1 {
 			channels := flag.Args()[1:]
 			c.Cmd.Join(channels...)
