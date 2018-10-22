@@ -37,9 +37,8 @@ const (
 const masterChan = ""
 
 type ircChan struct {
-	done   chan bool
-	nickfp string // TODO: remove
-	ln     net.Listener
+	done chan bool
+	ln   net.Listener
 }
 
 type ircDir struct {
@@ -331,14 +330,8 @@ func createListener(client *girc.Client, name string) error {
 
 	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
-		ch := &ircChan{
-			make(chan bool, 1),
-			filepath.Join(dir, nickfn),
-			nil,
-		}
-
-		idir.ch = ch
-		go serveNicks(client, name, ch)
+		idir.ch = &ircChan{make(chan bool, 1), nil}
+		go serveNicks(client, name, idir)
 	}
 
 	return nil
@@ -428,18 +421,19 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 	}
 }
 
-func serveNicks(client *girc.Client, name string, ch *ircChan) {
+func serveNicks(client *girc.Client, name string, dir *ircDir) {
 	var err error
 
-	ch.ln, err = net.Listen("unix", ch.nickfp)
+	nickfp := filepath.Join(dir.fp, nickfn)
+	dir.ch.ln, err = net.Listen("unix", nickfp)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for {
-		conn, err := ch.ln.Accept()
+		conn, err := dir.ch.ln.Accept()
 		select {
-		case <-ch.done:
+		case <-dir.ch.done:
 			return
 		default:
 			if err != nil {
