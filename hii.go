@@ -236,51 +236,50 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
-func getChanDir(client *girc.Client, event *girc.Event) (string, error) {
-	dir := ircPath
-	if event.IsFromChannel() {
-		dir = filepath.Join(dir, normalize(event.Params[0]))
-	} else if event.IsFromUser() {
-		name := event.Source.Name
-		if name == client.GetNick() {
-			name = event.Params[0] // IsFromUser checks len
-		}
+func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
+	var names []*string
 
-		err := createListener(client, name)
-		if err != nil {
-			return "", err
-		}
-
-		dir = filepath.Join(dir, normalize(name))
-	} else {
-		channel, isChanCmd := getCmdChan(event)
-		if isChanCmd {
-			dir = filepath.Join(dir, normalize(channel))
-		}
-	}
-
-	return dir, nil
-}
-
-func handleMultiChan(client *girc.Client, event *girc.Event) error {
 	user := client.LookupUser(event.Source.Name)
 	if user == nil {
-		return fmt.Errorf("user %q doesn't exist", event.Source.Name)
+		return names, fmt.Errorf("user %q doesn't exist", event.Source.Name)
 	}
 
 	for name, dir := range ircDirs {
-		if name == masterChan || dir.ch == nil || !user.InChannel(name) {
-			continue
-		}
-
-		fp := filepath.Join(ircPath, normalize(name))
-		err := writeEvent(event, fp)
-		if err != nil {
-			log.Println("Couldn't write msg to %q: %s\n", name, err)
+		if dir.ch != nil && user.InChannel(name) {
+			names = append(names, &name)
 		}
 	}
 
-	return nil
+	return names, nil
+}
+
+func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
+	if event.Command == girc.QUIT || event.Command == girc.NICK {
+		return getSourceDirs(client, event)
+	}
+
+	name := masterChan
+	if event.IsFromChannel() {
+		name = event.Params[0]
+	} else if event.IsFromUser() {
+		name = event.Source.Name
+		if name == client.GetNick() {
+			name = event.Params[0]
+		}
+
+		// TODO: Do this in handleMsg
+		err := createListener(client, name)
+		if err != nil {
+			return []*string{}, err
+		}
+	} else {
+		channel, isChanCmd := getCmdChan(event)
+		if isChanCmd {
+			name = channel
+		}
+	}
+
+	return []*string{&name}, nil
 }
 
 func storeName(dir, name string) error {
@@ -496,12 +495,13 @@ func writeMention(event *girc.Event) error {
 	return nil
 }
 
-func writeEvent(event *girc.Event, dir string) error {
+func writeEvent(event *girc.Event, name string) error {
 	out, ok := fmtEvent(event, true)
 	if !ok {
 		return nil
 	}
 
+	dir := filepath.Join(ircPath, normalize(name))
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
 		return err
@@ -569,13 +569,6 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	switch event.Command {
 	case girc.AWAY:
 		return // Ignore, occurs too often.
-	case girc.QUIT, girc.NICK:
-		err := handleMultiChan(client, &event)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		return // handleMultiChan writes the event
 	case girc.PRIVMSG:
 		if event.IsFromUser() && event.Source.Name != client.GetNick() ||
 			mntRegex.MatchString(event.Trailing) {
@@ -586,14 +579,16 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		}
 	}
 
-	dir, err := getChanDir(client, &event)
+	names, err := getEventDirs(client, &event)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = writeEvent(&event, dir)
-	if err != nil {
-		log.Fatal(err)
+	for _, name := range names {
+		err := writeEvent(&event, *name)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
