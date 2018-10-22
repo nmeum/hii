@@ -512,21 +512,6 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 	return appendFile(outfp, []byte(out), 0600)
 }
 
-func handleJoin(client *girc.Client, event girc.Event) {
-	if len(event.Params) < 1 || event.Source == nil {
-		return
-	}
-	name := event.Params[0]
-
-	if event.Source.Name == client.GetNick() {
-		err := createListener(client, name)
-		if err != nil {
-			log.Printf("Couldn't join %q: %s\n", name, err)
-			client.Cmd.Part(name)
-		}
-	}
-}
-
 func handlePart(client *girc.Client, event girc.Event) {
 	if len(event.Params) < 1 || event.Source == nil {
 		return
@@ -608,7 +593,6 @@ func addHandlers(client *girc.Client) {
 		cleanup()
 	})
 
-	client.Handlers.Add(girc.JOIN, handleJoin)
 	client.Handlers.Add(girc.PART, handlePart)
 	client.Handlers.Add(girc.KICK, handleKick)
 
