@@ -420,9 +420,9 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 }
 
 func serveNicks(client *girc.Client, name string, dir *ircDir) {
-	var err error
-
 	nickfp := filepath.Join(dir.fp, nickfn)
+
+	var err error
 	dir.ch.ln, err = net.Listen("unix", nickfp)
 	if err != nil {
 		log.Fatal(err)
@@ -486,8 +486,6 @@ func writeMention(event *girc.Event) error {
 }
 
 func writeEvent(client *girc.Client, event *girc.Event, name string) error {
-	var err error
-
 	out, ok := fmtEvent(event, true)
 	if !ok {
 		return nil
@@ -500,6 +498,7 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 		}
 		return fmt.Errorf("name clash (%s vs. %s)", idir.name, name)
 	} else if !ok {
+		var err error
 		idir, err = createListener(client, name)
 		if err != nil {
 			return err
@@ -593,9 +592,9 @@ func addHandlers(client *girc.Client) {
 }
 
 func newClient() (*girc.Client, error) {
-	var err error
 	var tlsconf *tls.Config
 	if useTLS {
+		var err error
 		tlsconf, err = getTLSconfig()
 		if err != nil {
 			return nil, err
