@@ -375,15 +375,28 @@ func handleInput(client *girc.Client, name, input string) error {
 	}
 
 	input = input[1:]
-	if strings.HasPrefix(input, girc.PRIVMSG) {
-		source := client.GetNick()
+	event := girc.ParseEvent(fmt.Sprintf(":%s %s", client.GetNick(), input))
+	if event == nil {
+		return nil
+	}
 
-		event := girc.ParseEvent(fmt.Sprintf(":%s %s", source, input))
-		if event == nil {
-			return nil
+	switch event.Command {
+	case girc.PRIVMSG:
+		client.RunHandlers(event)
+	case girc.JOIN:
+		var ch string
+		if len(event.Params) > 0 {
+			ch = event.Params[0]
+		} else if len(event.Trailing) > 0 {
+			ch = event.Trailing
 		}
 
-		client.RunHandlers(event)
+		if ch != "" {
+			idir, ok := ircDirs[normalize(ch)]
+			if ok && idir.name != ch {
+				return fmt.Errorf("cannot join %q: name clash", ch)
+			}
+		}
 	}
 
 	return client.Cmd.SendRaw(input + "\r\n")
@@ -493,10 +506,7 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 
 	idir, ok := ircDirs[normalize(name)]
 	if ok && idir.name != name {
-		if event.IsFromChannel() {
-			client.Cmd.Part(name)
-		}
-		return fmt.Errorf("name clash (%s vs. %s)", idir.name, name)
+		return fmt.Errorf("name clash (%q vs. %q)", idir.name, name)
 	} else if !ok {
 		var err error
 		idir, err = createListener(client, name)
