@@ -304,7 +304,9 @@ func storeName(dir *ircDir) error {
 }
 
 func createListener(client *girc.Client, name string) (*ircDir, error) {
-	dir := filepath.Join(ircPath, normalize(name))
+	key := normalize(name)
+	dir := filepath.Join(ircPath, key)
+
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
 		return nil, err
@@ -317,7 +319,7 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 			return nil, err
 		}
 	}
-	ircDirs[normalize(name)] = idir
+	ircDirs[key] = idir
 
 	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
