@@ -282,30 +282,25 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 	return []*string{&name}, nil
 }
 
-func storeName(dir, name string) error {
-	idfp := filepath.Join(dir, idfn)
-	file, err := os.OpenFile(idfp, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0200)
+func storeName(dir *ircDir) error {
+	tmpf, err := ioutil.TempFile(dir.fp, ".tmp"+idfn)
 	if err != nil {
-		if os.IsExist(err) {
-			return nil
-		}
 		return err
 	}
-	defer file.Close()
+	defer tmpf.Close()
 
-	_, err = file.WriteString(name + "\n")
+	_, err = tmpf.WriteString(dir.name + "\n")
 	if err != nil {
-		os.Remove(idfp)
+		os.Remove(tmpf.Name())
 		return err
 	}
-
-	err = file.Chmod(0400)
+	err = tmpf.Chmod(0400)
 	if err != nil {
-		os.Remove(idfp)
+		os.Remove(tmpf.Name())
 		return err
 	}
 
-	return nil
+	return os.Rename(tmpf.Name(), filepath.Join(dir.fp, idfn))
 }
 
 func createListener(client *girc.Client, name string) (*ircDir, error) {
@@ -314,14 +309,14 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	idir := &ircDir{name, make(chan bool, 1), dir, nil}
 	if name != masterChan {
-		err = storeName(dir, name)
+		err = storeName(idir)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	idir := &ircDir{name, make(chan bool, 1), dir, nil}
 	ircDirs[normalize(name)] = idir
 
 	go recvInput(client, name, idir)
