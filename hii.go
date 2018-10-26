@@ -34,15 +34,17 @@ const (
 	idfn   = "id"
 )
 
+const masterChan = ""
+
 type ircChan struct {
-	done   chan bool
-	nickfp string
-	ln     net.Listener
+	done chan bool
+	ln   net.Listener
 }
 
 type ircDir struct {
+	name string
 	done chan bool
-	infp string
+	fp   string
 	ch   *ircChan
 }
 
@@ -90,10 +92,10 @@ func usage() {
 }
 
 func cleanup() {
-	for name, _ := range ircDirs {
-		err := removeListener(name)
+	for _, dir := range ircDirs {
+		err := removeListener(dir.name)
 		if err != nil {
-			log.Printf("Couldn't remove %q: %s\n", name, err)
+			log.Printf("Couldn't remove %q: %s\n", dir.name, err)
 		}
 	}
 }
@@ -220,6 +222,12 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 	return nil
 }
 
+func isMention(client *girc.Client, event *girc.Event) bool {
+	return event.IsFromUser() &&
+		event.Source.Name != client.GetNick() ||
+		mntRegex.MatchString(event.Trailing)
+}
+
 func getCmdChan(event *girc.Event) (string, bool) {
 	idx, ok := channelCmds[event.Command]
 	if !ok || len(event.Params) < idx+1 {
@@ -234,129 +242,107 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
-func getChanDir(client *girc.Client, event *girc.Event) (string, error) {
-	dir := ircPath
+func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
+	var names []*string
+
+	user := client.LookupUser(event.Source.Name)
+	if user == nil {
+		return names, fmt.Errorf("user %q doesn't exist", event.Source.Name)
+	}
+
+	for _, dir := range ircDirs {
+		if dir.ch != nil && user.InChannel(dir.name) {
+			names = append(names, &dir.name)
+		}
+	}
+
+	return names, nil
+}
+
+func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
+	if event.Command == girc.QUIT || event.Command == girc.NICK {
+		return getSourceDirs(client, event)
+	}
+
+	name := masterChan
 	if event.IsFromChannel() {
-		dir = filepath.Join(dir, normalize(event.Params[0]))
+		name = event.Params[0]
 	} else if event.IsFromUser() {
-		name := event.Source.Name
+		name = event.Source.Name
 		if name == client.GetNick() {
-			name = event.Params[0] // IsFromUser checks len
+			name = event.Params[0]
 		}
-
-		err := createListener(client, name)
-		if err != nil {
-			return "", err
-		}
-
-		dir = filepath.Join(dir, normalize(name))
 	} else {
 		channel, isChanCmd := getCmdChan(event)
 		if isChanCmd {
-			dir = filepath.Join(dir, normalize(channel))
+			name = channel
 		}
 	}
 
-	return dir, nil
+	return []*string{&name}, nil
 }
 
-func handleMultiChan(client *girc.Client, event *girc.Event) error {
-	user := client.LookupUser(event.Source.Name)
-	if user == nil {
-		return fmt.Errorf("user %q doesn't exist", event.Source.Name)
-	}
-
-	for name, dir := range ircDirs {
-		if name == "" || dir.ch == nil || !user.InChannel(name) {
-			continue
-		}
-
-		fp := filepath.Join(ircPath, normalize(name))
-		err := writeEvent(event, fp)
-		if err != nil {
-			log.Println("Couldn't write msg to %q: %s\n", name, err)
-		}
-	}
-
-	return nil
-}
-
-func storeName(dir, name string) error {
-	idfp := filepath.Join(dir, idfn)
-	file, err := os.OpenFile(idfp, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0200)
+func storeName(dir *ircDir) error {
+	tmpf, err := ioutil.TempFile(dir.fp, ".tmp"+idfn)
 	if err != nil {
-		if os.IsExist(err) {
-			return nil
-		}
 		return err
 	}
-	defer file.Close()
+	defer tmpf.Close()
 
-	_, err = file.WriteString(name + "\n")
+	_, err = tmpf.WriteString(dir.name + "\n")
 	if err != nil {
-		os.Remove(idfp)
+		os.Remove(tmpf.Name())
+		return err
+	}
+	err = tmpf.Chmod(0400)
+	if err != nil {
+		os.Remove(tmpf.Name())
 		return err
 	}
 
-	err = file.Chmod(0400)
-	if err != nil {
-		os.Remove(idfp)
-		return err
-	}
-
-	return nil
+	return os.Rename(tmpf.Name(), filepath.Join(dir.fp, idfn))
 }
 
-func createListener(client *girc.Client, name string) error {
-	_, ok := ircDirs[name]
-	if ok {
-		return nil
-	}
+func createListener(client *girc.Client, name string) (*ircDir, error) {
+	key := normalize(name)
+	dir := filepath.Join(ircPath, key)
 
-	dir := filepath.Join(ircPath, normalize(name))
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
-		return err
-	}
-	if name != "" {
-		err = storeName(dir, name)
-		if err != nil {
-			return err
-		}
+		return nil, err
 	}
 
-	idir := &ircDir{
-		make(chan bool, 1),
-		filepath.Join(dir, infn),
-		nil,
+	idir := &ircDir{name, make(chan bool, 1), dir, nil}
+	if name != masterChan {
+		err = storeName(idir)
+		if err != nil {
+			return nil, err
+		}
 	}
-	ircDirs[name] = idir
+	ircDirs[key] = idir
 
 	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
-		ch := &ircChan{
-			make(chan bool, 1),
-			filepath.Join(dir, nickfn),
-			nil,
-		}
-
-		idir.ch = ch
-		go serveNicks(client, name, ch)
+		idir.ch = &ircChan{make(chan bool, 1), nil}
+		go serveNicks(client, name, idir)
 	}
 
-	return nil
+	return idir, nil
 }
 
 func removeListener(name string) error {
-	dir, ok := ircDirs[name]
+	key := normalize(name)
+	dir, ok := ircDirs[key]
 	if !ok {
 		return fmt.Errorf("no directory exists for %q", name)
 	}
-	defer delete(ircDirs, name)
+	defer delete(ircDirs, key)
+
+	infp := filepath.Join(dir.fp, infn)
 
 	// hack to gracefully terminate the recvInput goroutine
 	dir.done <- true
-	fifo, err := openFifo(dir.infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
+	fifo, err := openFifo(infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
 	if err != nil {
 		return err
 	}
@@ -371,7 +357,7 @@ func removeListener(name string) error {
 		}
 	}
 
-	return os.Remove(dir.infp)
+	return os.Remove(infp)
 }
 
 func handleInput(client *girc.Client, name, input string) error {
@@ -386,23 +372,37 @@ func handleInput(client *girc.Client, name, input string) error {
 	}
 
 	input = input[1:]
-	if strings.HasPrefix(input, girc.PRIVMSG) {
-		source := client.GetNick()
+	event := girc.ParseEvent(fmt.Sprintf(":%s %s", client.GetNick(), input))
+	if event == nil {
+		return nil
+	}
 
-		event := girc.ParseEvent(fmt.Sprintf(":%s %s", source, input))
-		if event == nil {
-			return nil
+	switch event.Command {
+	case girc.PRIVMSG:
+		client.RunHandlers(event)
+	case girc.JOIN:
+		var ch string
+		if len(event.Params) > 0 {
+			ch = event.Params[0]
+		} else if len(event.Trailing) > 0 {
+			ch = event.Trailing
 		}
 
-		client.RunHandlers(event)
+		if ch != "" {
+			idir, ok := ircDirs[normalize(ch)]
+			if ok && idir.name != ch {
+				return fmt.Errorf("cannot join %q: name clash", ch)
+			}
+		}
 	}
 
 	return client.Cmd.SendRaw(input + "\r\n")
 }
 
 func recvInput(client *girc.Client, name string, dir *ircDir) {
+	infp := filepath.Join(dir.fp, infn)
 	for {
-		fifo, err := openFifo(dir.infp, os.O_RDONLY, 0600)
+		fifo, err := openFifo(infp, os.O_RDONLY, 0600)
 		select {
 		case <-dir.done:
 			return
@@ -429,18 +429,19 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 	}
 }
 
-func serveNicks(client *girc.Client, name string, ch *ircChan) {
-	var err error
+func serveNicks(client *girc.Client, name string, dir *ircDir) {
+	nickfp := filepath.Join(dir.fp, nickfn)
 
-	ch.ln, err = net.Listen("unix", ch.nickfp)
+	var err error
+	dir.ch.ln, err = net.Listen("unix", nickfp)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for {
-		conn, err := ch.ln.Accept()
+		conn, err := dir.ch.ln.Accept()
 		select {
-		case <-ch.done:
+		case <-dir.ch.done:
 			return
 		default:
 			if err != nil {
@@ -494,34 +495,25 @@ func writeMention(event *girc.Event) error {
 	return nil
 }
 
-func writeEvent(event *girc.Event, dir string) error {
+func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 	out, ok := fmtEvent(event, true)
 	if !ok {
 		return nil
 	}
 
-	err := os.MkdirAll(dir, 0700)
-	if err != nil {
-		return err
-	}
-
-	outfp := filepath.Join(dir, outfn)
-	return appendFile(outfp, []byte(out), 0600)
-}
-
-func handleJoin(client *girc.Client, event girc.Event) {
-	if len(event.Params) < 1 || event.Source == nil {
-		return
-	}
-	name := event.Params[0]
-
-	if event.Source.Name == client.GetNick() {
-		err := createListener(client, name)
+	idir, ok := ircDirs[normalize(name)]
+	if ok && idir.name != name {
+		return fmt.Errorf("name clash (%q vs. %q)", idir.name, name)
+	} else if !ok {
+		var err error
+		idir, err = createListener(client, name)
 		if err != nil {
-			log.Printf("Couldn't join %q: %s\n", name, err)
-			client.Cmd.Part(name)
+			return err
 		}
 	}
+
+	outfp := filepath.Join(idir.fp, outfn)
+	return appendFile(outfp, []byte(out), 0600)
 }
 
 func handlePart(client *girc.Client, event girc.Event) {
@@ -567,16 +559,8 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	switch event.Command {
 	case girc.AWAY:
 		return // Ignore, occurs too often.
-	case girc.QUIT, girc.NICK:
-		err := handleMultiChan(client, &event)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		return // handleMultiChan writes the event
 	case girc.PRIVMSG:
-		if event.IsFromUser() && event.Source.Name != client.GetNick() ||
-			mntRegex.MatchString(event.Trailing) {
+		if isMention(client, &event) {
 			err := writeMention(&event)
 			if err != nil {
 				log.Fatal(err)
@@ -584,24 +568,21 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		}
 	}
 
-	dir, err := getChanDir(client, &event)
+	names, err := getEventDirs(client, &event)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = writeEvent(&event, dir)
-	if err != nil {
-		log.Fatal(err)
+	for _, name := range names {
+		err := writeEvent(client, &event, *name)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
 func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		err := createListener(c, "")
-		if err != nil {
-			log.Fatalf("Couldn't create master channel: %s", err)
-		}
-
 		if flag.NArg() > 1 {
 			channels := flag.Args()[1:]
 			c.Cmd.Join(channels...)
@@ -611,7 +592,6 @@ func addHandlers(client *girc.Client) {
 		cleanup()
 	})
 
-	client.Handlers.Add(girc.JOIN, handleJoin)
 	client.Handlers.Add(girc.PART, handlePart)
 	client.Handlers.Add(girc.KICK, handleKick)
 
@@ -619,9 +599,9 @@ func addHandlers(client *girc.Client) {
 }
 
 func newClient() (*girc.Client, error) {
-	var err error
 	var tlsconf *tls.Config
 	if useTLS {
+		var err error
 		tlsconf, err = getTLSconfig()
 		if err != nil {
 			return nil, err
