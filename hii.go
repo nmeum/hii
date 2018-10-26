@@ -346,6 +346,8 @@ func removeListener(name string) error {
 	if err != nil {
 		return err
 	}
+
+	defer os.Remove(infp)
 	fifo.Close()
 
 	ch := dir.ch
@@ -357,7 +359,7 @@ func removeListener(name string) error {
 		}
 	}
 
-	return os.Remove(infp)
+	return nil
 }
 
 func handleInput(client *girc.Client, name, input string) error {
