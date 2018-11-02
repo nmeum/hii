@@ -244,6 +244,9 @@ func getCmdChan(event *girc.Event) (string, bool) {
 
 func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 	var names []*string
+	if event.Source == nil || event.Source.Name == client.GetNick() {
+		return names, nil
+	}
 
 	user := client.LookupUser(event.Source.Name)
 	if user == nil {
