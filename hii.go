@@ -62,6 +62,11 @@ var (
 )
 
 var (
+	errNotExist = fmt.Errorf("IRC directory doesn't exist")
+	errExist    = fmt.Errorf("IRC directory already exists")
+)
+
+var (
 	mntRegex *regexp.Regexp
 	logFile  *os.File
 )
@@ -316,8 +321,11 @@ func storeName(dir *ircDir) error {
 
 func createListener(client *girc.Client, name string) (*ircDir, error) {
 	key := normalize(name)
-	dir := filepath.Join(ircPath, key)
+	if idir, ok := ircDirs[key]; ok {
+		return idir, errExist
+	}
 
+	dir := filepath.Join(ircPath, key)
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
 		return nil, err
@@ -336,6 +344,8 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 	if girc.IsValidChannel(name) {
 		idir.ch = &ircChan{make(chan bool, 1), nil}
 		go serveNicks(client, name, idir)
+	} else if girc.IsValidNick(name) {
+		client.Cmd.Monitor('+', name)
 	}
 
 	return idir, nil
@@ -345,7 +355,7 @@ func removeListener(name string) error {
 	key := normalize(name)
 	dir, ok := ircDirs[key]
 	if !ok {
-		return fmt.Errorf("no directory exists for %q", name)
+		return errNotExist
 	}
 	defer delete(ircDirs, key)
 
@@ -532,6 +542,33 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 	return appendFile(outfp, []byte(out), 0600)
 }
 
+func handleMonitor(client *girc.Client, event girc.Event) {
+	targets := strings.Split(event.Trailing, ",")
+	for _, target := range targets {
+		source := girc.ParseSource(target)
+
+		// User might have already been removed elsewhere or
+		// added in writeEvent already. Thus we ignore the
+		// double removal / creation error.
+
+		var err, expErr error
+		switch event.Command {
+		case girc.RPL_MONOFFLINE:
+			err = removeListener(source.Name)
+			expErr = errNotExist
+		case girc.RPL_MONONLINE:
+			_, err = createListener(client, source.Name)
+			expErr = errExist
+		default:
+			panic("Unexpected command")
+		}
+
+		if err != nil && err != expErr {
+			log.Printf("Couldn't monitor %q: %s\n", target, err)
+		}
+	}
+}
+
 func handlePart(client *girc.Client, event girc.Event) {
 	if len(event.Params) < 1 || event.Source == nil {
 		return
@@ -605,6 +642,9 @@ func addHandlers(client *girc.Client) {
 			c.Cmd.Join(channels...)
 		}
 	})
+
+	client.Handlers.Add(girc.RPL_MONOFFLINE, handleMonitor)
+	client.Handlers.Add(girc.RPL_MONONLINE, handleMonitor)
 
 	client.Handlers.Add(girc.PART, handlePart)
 	client.Handlers.Add(girc.KICK, handleKick)
