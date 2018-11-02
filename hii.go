@@ -527,15 +527,11 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 		return nil
 	}
 
-	idir, ok := ircDirs[normalize(name)]
-	if ok && idir.name != name {
+	idir, err := createListener(client, name)
+	if err == errExist && idir.name != name {
 		return fmt.Errorf("name clash (%q vs. %q)", idir.name, name)
-	} else if !ok {
-		var err error
-		idir, err = createListener(client, name)
-		if err != nil {
-			return err
-		}
+	} else if err != nil && err != errExist {
+		return err
 	}
 
 	outfp := filepath.Join(idir.fp, outfn)
