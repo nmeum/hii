@@ -482,7 +482,7 @@ func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 		out = strings.TrimPrefix(out, prefix)
 	}
 
-	out = fmt.Sprintf("%v %s\n", event.Timestamp.Unix(), out)
+	out = fmt.Sprintf("%v %s\n", event.Timestamp.Unix(), girc.StripRaw(out))
 	return out, true
 }
 
