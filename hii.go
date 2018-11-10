@@ -97,6 +97,11 @@ func cleanup() {
 	}
 }
 
+func die(err error) {
+	cleanup()
+	log.Fatal(err)
+}
+
 func parseFlags() {
 	user, err := user.Current()
 	if err != nil {
@@ -410,7 +415,7 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 			return
 		default:
 			if err != nil {
-				log.Fatal(err)
+				die(err)
 			}
 
 			scanner := bufio.NewScanner(fifo)
@@ -437,7 +442,7 @@ func serveNicks(client *girc.Client, name string, dir *ircDir) {
 	var err error
 	dir.ch.ln, err = net.Listen("unix", nickfp)
 	if err != nil {
-		log.Fatal(err)
+		die(err)
 	}
 
 	for {
@@ -565,14 +570,14 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		if isMention(client, &event) {
 			err := writeMention(&event)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 		}
 	}
 
 	names, err := getEventDirs(client, &event)
 	if err != nil {
-		log.Fatal(err)
+		die(err)
 	}
 
 	for _, name := range names {
