@@ -21,9 +21,6 @@ import (
 	"github.com/lrstanley/girc"
 )
 
-// TODO: Detect PING timeout and quit (suspend laptop to reproduce this)
-// TODO: Disable girc tracking to sparse some memory
-
 var ircPath string
 
 const (
