@@ -266,10 +266,6 @@ func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 }
 
 func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
-	if event.Command == girc.QUIT || event.Command == girc.NICK {
-		return getSourceDirs(client, event)
-	}
-
 	name := masterChan
 	if event.IsFromChannel() {
 		name = event.Params[0]
@@ -279,6 +275,11 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 			name = event.Params[0]
 		}
 	} else {
+		switch event.Command {
+		case girc.QUIT, girc.NICK:
+			return getSourceDirs(client, event)
+		}
+
 		channel, isChanCmd := getCmdChan(event)
 		if isChanCmd {
 			name = channel
