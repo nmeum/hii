@@ -26,7 +26,7 @@ New features (compared to ii):
 * A proper IRC protocol implementation through [girc][girc repo]
 * Support for automatically joining channels on startup
 * Support for a per-channel nick list using a UNIX domain socket
-* Support for recording messages mentioning the users.
+* Support for recording messages mentioning the users
 * Built-in TLS support
 * Built-in IPv6 support
 
