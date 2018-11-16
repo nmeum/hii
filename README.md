@@ -16,10 +16,10 @@ harmful ii or ii for humans (hii).
 
 ## Status
 
-This is work in progress. Some of the features I intended to add to ii
-are already implemented, others aren't. Besides, I am currently not
-using this myself since I didn't finish work on the frontend yet, thus
-the code is likely full of bugs and very unstable.
+Most of the features I intended to add to ii are already implemented.
+However, this is still work in progress and not yet entirely feature
+complete. Nonetheless, I started using this myself recently and believe
+that the most serious bugs have been fixed by now.
 
 ## Features
 
