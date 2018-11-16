@@ -1,6 +1,6 @@
 # hii
 
-Harmful [ii(1)][ii homepage] also known as ii for humans.
+A file-based IRC client inspired by [ii(1)][ii homepage].
 
 ## Motivation
 
@@ -8,8 +8,11 @@ I originally only intended to write a frontend for ii instead of
 completely rewriting it from scratch. However, while working on the
 frontend I noticed that I couldn't implement certain features in the
 frontend without changes to the backend (ii). I briefly considered
-patching ii but ultimately decided for a rewrite since I could also
-achieve memory safety while at it.
+patching ii but ultimately decided for a rewrite.
+
+During the rewrite various features have been implemented which could
+have been moved to separate tools, such as TLS support, hence the name
+harmful ii or ii for humans (hii).
 
 ## Status
 
