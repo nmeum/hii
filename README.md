@@ -76,14 +76,13 @@ packing this software for a distribution, run the following commands:
 Why are nick names served using a unix domain socket anyhow?
 
 **A:** Several ways of implementing a nick list have been considered.
-Using a regular file has various obvious disadvantages. To name a few:
-The file would need to be truncated every time the nick list changes,
-doing so would cause a lot of file system operation and would require
-file locking. Using a FUSE for serving the nick list was also briefly
-considered, however, while this would allow interaction with standard
-utilities it would require linking against FUSE and would complicate
-things quite a bit. Serving nick using a unix domain socket seemed to be
-a reasonable compromise.
+Using a regular file has various obvious disadvantages. For instance,
+the file would need to be truncated every time the nick list changes,
+which causes a lot of file system operation. Using a FUSE for serving
+the nick list was also briefly considered, however, while this would
+allow interaction with standard utilities it would require linking
+against FUSE and would complicate things quite a bit. Serving nicks
+using a unix domain socket seemed to be a reasonable compromise.
 
 **Q:** Why are mentions recorded in a separate file? Can't this be
 implemented using inotify, kqueue, … in the frontend?
