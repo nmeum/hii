@@ -46,10 +46,9 @@ have a limit feature set and shouldn't ["expand until it can read mail"]
 ### Compatibility with ii
 
 Backwards compatibility with ii wasn't a goal. While the directory
-structure created by hii is the same as the one created by ii everything
-else is pretty much different. This is the case because proper backwards
-compatibility would have been a lot of work and I personally
-didn't need it.
+structure is backwards compatible everything else is pretty much
+different. This is the case because proper backwards compatibility would
+have been a lot of work and I personally didn't need it.
 
 ## Installation
 
