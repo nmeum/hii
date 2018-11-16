@@ -114,7 +114,7 @@ Public License for more details.
 You should have received a copy of the GNU General Public License along
 with this program. If not, see <http://www.gnu.org/licenses/>.
 
-[ii homepage]: https://tools.suckless.org/
+[ii homepage]: https://tools.suckless.org/ii/
 [girc repo]: https://github.com/lrstanley/girc
 [password message]: https://tools.ietf.org/html/rfc1459#section-4.1.1
 [freenode certfp]: https://freenode.net/kb/answer/certfp
