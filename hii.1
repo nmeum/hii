@@ -19,7 +19,7 @@
 .Op Ar channel ...
 .Sh DESCRIPTION
 .Nm
-is a FIFO and file system based IRC client.
+is a file-based IRC client.
 It is heavily inspired by
 .Xr ii 1
 but offers more features, e.g. built-in TLS support.
@@ -27,62 +27,16 @@ but offers more features, e.g. built-in TLS support.
 Just as
 .Xr ii 1
 .Nm
-creates a directory tree for the server containing subdirectories for
-every conversation started on that server.
-This includes public IRC channels and private conversations with other users.
-These directories are subdirectories of a directory created for the IRC
-server itself, the so called master channel.
-The following files are created in each directory:
-.Pp
-.Bl -tag -width "-nosplitX" -offset indent -compact
-.It Pa in
-A FIFO which can be used to write messages to the IRC server.
-If the messages is prefixed with a backslash it is transmitted as a raw
-IRC message, otherwise a
-.Em PRIVMSG
-with the given text is created and send to the channel/user associated
-with the current subdirectory.
-This file is removed as soon as
-.Nm
-terminates.
-.It Pa out
-A regular file containing messages received from the IRC server in a
-human readable format.
-The file only contains IRC messages associated with the channel/user
-represented by the subdirectory.
-This file is not removed on program termination.
-.It Pa id
-A unique ID for identifying the conversation.
-For public IRC channels this is the unsanitized channel, for private
-conversation the unsanitized user name.
-This file does not exist for the master channel and is not removed on
-program termination.
-.El
-.Pp
-The master channel directory also include a file named
-.Pa log .
-This file contains all received messages containing the user's name and
-messages received through private conversations.
-.Pp
-Directories for public IRC channels also contain the following files:
-.Pp
-.Bl -tag -width "-nosplitX" -offset indent -compact
-.It Pa usr
-A UNIX domain socket which reports the nick names of all users currently
-connected to the channel.
-Nick names are separated by a newline and written in alphabetic order to
-the socket.
-The socket is closed by
-.Nm
-as soon as all nick names haven been written to it.
-Additionally, it is removed entirely as soon as the program terminates.
-.El
+creates a directory tree for the server (the master channel) containing
+subdirectories for every conversation started on that server.
+This includes public IRC channels and private conversations with other
+users.
 .Pp
 On startup
 .Nm
 attempts to connect to the given
 .Ar server .
-If a connection was established successful it automatically joins the
+If a connection was established successfully it automatically joins the
 given IRC
 .Ar channels
 (if any).
@@ -135,6 +89,37 @@ Defaults to 6667.
 Enables TLS, which is disabled by default.
 .It Fl d
 Write debug messages to standard output.
+.El
+.Sh FILES
+.Bl -tag -width "usr"
+.It Pa in
+A FIFO used to send messages to the IRC server.
+If the message is prefixed with a backlash it is send to the server as
+is.
+Otherwise it is interpreted as a
+.Em PRIVMSG
+and send to the target associated with the subdirectory.
+This file is removed on program termination.
+.It Pa out
+A regular file containing messages received for the target associated
+with the subdirectory.
+This file is not removed on program termination.
+.It Pa id
+A regular file containing a unique id for identifying the target
+associated with the subdirectory.
+This file does not exist in the master channel directory and is not
+removed on program termination.
+.It Pa usr
+A UNIX domain socket which reports the nicks of all users currently
+present in an IRC channel.
+Nicks are separated by a newline and written in alphabetic order to the
+socket.
+The socket only exists in subdirectories associated with IRC channels
+and is closed on program termination.
+.It Pa log
+A regular file containing received messages which either mention the
+user's nick or were received through private conversations.
+This file is not removed on program termination.
 .El
 .Sh EXIT STATUS
 .Nm
