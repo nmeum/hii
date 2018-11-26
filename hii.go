@@ -346,6 +346,7 @@ func removeListener(name string) error {
 	defer delete(ircDirs, key)
 
 	infp := filepath.Join(dir.fp, infn)
+	nickfp := filepath.Join(dir.fp, nickfn)
 
 	// hack to gracefully terminate the recvInput goroutine
 	dir.done <- true
@@ -353,9 +354,12 @@ func removeListener(name string) error {
 	if err != nil {
 		return err
 	}
-
-	defer os.Remove(infp)
 	fifo.Close()
+
+	defer func() {
+		os.Remove(infp)
+		os.Remove(nickfp)
+	}()
 
 	ch := dir.ch
 	if ch != nil && ch.ln != nil {
