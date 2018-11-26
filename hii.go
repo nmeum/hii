@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"unicode"
 
+	"github.com/google/renameio"
 	"github.com/lrstanley/girc"
 )
 
@@ -290,24 +291,23 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 }
 
 func storeName(dir *ircDir) error {
-	tmpf, err := ioutil.TempFile(dir.fp, ".tmp"+idfn)
+	tmpf, err := renameio.TempFile("", filepath.Join(dir.fp, idfn))
 	if err != nil {
 		return err
 	}
-	defer tmpf.Close()
+	defer tmpf.Cleanup()
+
+	err = tmpf.Chmod(0400)
+	if err != nil {
+		return err
+	}
 
 	_, err = tmpf.WriteString(dir.name + "\n")
 	if err != nil {
-		os.Remove(tmpf.Name())
-		return err
-	}
-	err = tmpf.Chmod(0400)
-	if err != nil {
-		os.Remove(tmpf.Name())
 		return err
 	}
 
-	return os.Rename(tmpf.Name(), filepath.Join(dir.fp, idfn))
+	return tmpf.CloseAtomicallyReplace()
 }
 
 func createListener(client *girc.Client, name string) (*ircDir, error) {
