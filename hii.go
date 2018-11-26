@@ -358,7 +358,7 @@ func removeListener(name string) error {
 	fifo.Close()
 
 	ch := dir.ch
-	if ch != nil {
+	if ch != nil && ch.ln != nil {
 		ch.done <- true
 		err := ch.ln.Close()
 		if err != nil {
