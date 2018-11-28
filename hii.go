@@ -348,6 +348,11 @@ func removeListener(name string) error {
 	infp := filepath.Join(dir.fp, infn)
 	nickfp := filepath.Join(dir.fp, nickfn)
 
+	defer func() {
+		os.Remove(infp)
+		os.Remove(nickfp)
+	}()
+
 	// hack to gracefully terminate the recvInput goroutine
 	dir.done <- true
 	fifo, err := openFifo(infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
@@ -355,11 +360,6 @@ func removeListener(name string) error {
 		return err
 	}
 	fifo.Close()
-
-	defer func() {
-		os.Remove(infp)
-		os.Remove(nickfp)
-	}()
 
 	ch := dir.ch
 	if ch != nil && ch.ln != nil {
