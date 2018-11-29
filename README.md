@@ -42,9 +42,8 @@ Features intentionally not implemented:
 * Shortcut commands, e.g. `/j`. If you need them write yourself a shell
   script for mapping shortcut commands to real commands.
 
-While hii certainly has more features than ii it is still supposed to
-have a limit feature set and shouldn't ["expand until it can read mail"]
-[jwz's law].
+While hii has more features than ii it is still supposed to have a limit
+feature set and shouldn't ["expand until it can read mail"][jwz's law].
 
 ### Compatibility with ii
 
