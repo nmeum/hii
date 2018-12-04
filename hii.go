@@ -189,7 +189,7 @@ func normalize(name string) string {
 // Like os.OpenFile but for FIFOs.
 func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
 	fi, err := os.Lstat(name)
-	if os.IsNotExist(err) {
+	if flag&os.O_CREATE != 0 && os.IsNotExist(err) {
 		err = syscall.Mkfifo(name, syscall.S_IFIFO|uint32(perm))
 		if err != nil {
 			return nil, err
@@ -200,6 +200,7 @@ func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
 		return nil, fmt.Errorf("%q is not a named pipe", name)
 	}
 
+	flag &^= os.O_CREATE // remove os.O_CREATE flag used above
 	fifo, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
@@ -411,7 +412,7 @@ func handleInput(client *girc.Client, name, input string) error {
 func recvInput(client *girc.Client, name string, dir *ircDir) {
 	infp := filepath.Join(dir.fp, infn)
 	for {
-		fifo, err := openFifo(infp, os.O_RDONLY, 0600)
+		fifo, err := openFifo(infp, os.O_CREATE|os.O_RDONLY, 0600)
 		select {
 		case <-dir.done:
 			return
