@@ -567,7 +567,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	}
 
 	switch event.Command {
-	case girc.AWAY, girc.CAP_ACCOUNT:
+	case girc.AWAY, girc.CAP_ACCOUNT, girc.CAP_CHGHOST:
 		return // Ignore, occurs too often.
 	case girc.PRIVMSG:
 		if isMention(client, &event) {
