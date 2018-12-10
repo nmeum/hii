@@ -227,7 +227,7 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 
 func isMention(client *girc.Client, event *girc.Event) bool {
 	return event.IsFromUser() &&
-		event.Source.Name != client.GetNick() ||
+		event.Source.ID() != client.GetID() ||
 		mntRegex.MatchString(event.Trailing)
 }
 
@@ -252,7 +252,7 @@ func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 	}
 
 	user := client.LookupUser(event.Source.Name)
-	if user == nil && client.GetNick() == event.Source.Name {
+	if user == nil && client.GetID() == event.Source.ID() {
 		return names, nil // User didn't join any channels yet
 	} else if user == nil {
 		return names, fmt.Errorf("user %q doesn't exist", event.Source.Name)
@@ -274,7 +274,7 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 		name = event.Params[0]
 	} else if event.IsFromUser() {
 		name = event.Source.Name
-		if name == client.GetNick() {
+		if event.Source.ID() == client.GetID() {
 			name = event.Params[0]
 		}
 	} else {
@@ -534,7 +534,7 @@ func handlePart(client *girc.Client, event girc.Event) {
 	}
 	name := event.Params[0]
 
-	if event.Source.Name == client.GetNick() {
+	if event.Source.ID() == client.GetID() {
 		err := removeListener(name)
 		if err != nil {
 			log.Printf("Couldn't remove %q after part: %s\n", name, err)
@@ -543,7 +543,8 @@ func handlePart(client *girc.Client, event girc.Event) {
 }
 
 func handleKick(client *girc.Client, event girc.Event) {
-	if len(event.Params) < 2 || event.Params[1] != client.GetNick() {
+	if len(event.Params) < 2 ||
+		girc.ToRFC1459(event.Params[1]) != client.GetID() {
 		return
 	}
 	name := event.Params[0]
