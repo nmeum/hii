@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
@@ -463,8 +464,11 @@ func serveNicks(client *girc.Client, name string, dir *ircDir) {
 
 			ch := client.LookupChannel(name)
 			if ch != nil {
-				users := strings.Join(ch.UserList, "\n")
-				_, err = conn.Write([]byte(users + "\n"))
+				var b bytes.Buffer
+				for _, user := range ch.Users(client) {
+					b.WriteString(user.Nick + "\n")
+				}
+				_, err = conn.Write(b.Bytes())
 				if err != nil {
 					log.Println(err)
 				}
