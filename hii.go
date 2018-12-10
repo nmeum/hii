@@ -600,9 +600,6 @@ func addHandlers(client *girc.Client) {
 			c.Cmd.Join(channels...)
 		}
 	})
-	client.Handlers.Add(girc.DISCONNECTED, func(c *girc.Client, e girc.Event) {
-		cleanup()
-	})
 
 	client.Handlers.Add(girc.PART, handlePart)
 	client.Handlers.Add(girc.KICK, handleKick)
