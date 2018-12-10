@@ -247,12 +247,14 @@ func getCmdChan(event *girc.Event) (string, bool) {
 
 func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 	var names []*string
-	if event.Source == nil || event.Source.Name == client.GetNick() {
+	if event.Source == nil {
 		return names, nil
 	}
 
 	user := client.LookupUser(event.Source.Name)
-	if user == nil {
+	if user == nil && client.GetNick() == event.Source.Name {
+		return names, nil // User didn't join any channels yet
+	} else if user == nil {
 		return names, fmt.Errorf("user %q doesn't exist", event.Source.Name)
 	}
 
