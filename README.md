@@ -28,6 +28,7 @@ New features (compared to ii):
 * Memory safety
 * A proper IRC protocol implementation through [girc][girc repo]
 * Support for automatically joining channels on startup
+* Support for [IRCv3.2 monitoring][ircv3.2 monitor]
 * Support for a per-channel nick list using a UNIX domain socket
 * Support for recording messages mentioning the users
 * Built-in TLS support
@@ -120,3 +121,4 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 [oftc certfp]: https://www.oftc.net/NickServ/CertFP/
 [hackint certfp]: https://www.hackint.org/services#NickServ
 [jwz's law]: https://en.wikipedia.org/wiki/Zawinski's_law_of_software_envelopment#Principles
+[ircv3.2 monitor]: https://ircv3.net/specs/core/monitor-3.2.html

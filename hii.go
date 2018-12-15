@@ -62,6 +62,11 @@ var (
 )
 
 var (
+	errNotExist = fmt.Errorf("IRC directory doesn't exist")
+	errExist    = fmt.Errorf("IRC directory already exists")
+)
+
+var (
 	mntRegex *regexp.Regexp
 	logFile  *os.File
 )
@@ -79,7 +84,7 @@ var channelCmds = map[string]int{
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(),
-		"USAGE: %s [FLAGS] SERVER [CHANNEL...]\n\n"+
+		"USAGE: %s [FLAGS] SERVER [TARGET...]\n\n"+
 			"The following flags are supported:\n\n", os.Args[0])
 	flag.PrintDefaults()
 
@@ -316,8 +321,11 @@ func storeName(dir *ircDir) error {
 
 func createListener(client *girc.Client, name string) (*ircDir, error) {
 	key := normalize(name)
-	dir := filepath.Join(ircPath, key)
+	if idir, ok := ircDirs[key]; ok {
+		return idir, errExist
+	}
 
+	dir := filepath.Join(ircPath, key)
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
 		return nil, err
@@ -336,6 +344,8 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 	if girc.IsValidChannel(name) {
 		idir.ch = &ircChan{make(chan bool, 1), nil}
 		go serveNicks(client, name, idir)
+	} else if girc.IsValidNick(name) {
+		client.Cmd.Monitor('+', name)
 	}
 
 	return idir, nil
@@ -345,7 +355,7 @@ func removeListener(name string) error {
 	key := normalize(name)
 	dir, ok := ircDirs[key]
 	if !ok {
-		return fmt.Errorf("no directory exists for %q", name)
+		return errNotExist
 	}
 	defer delete(ircDirs, key)
 
@@ -517,19 +527,42 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 		return nil
 	}
 
-	idir, ok := ircDirs[normalize(name)]
-	if ok && idir.name != name {
+	idir, err := createListener(client, name)
+	if err == errExist && idir.name != name {
 		return fmt.Errorf("name clash (%q vs. %q)", idir.name, name)
-	} else if !ok {
-		var err error
-		idir, err = createListener(client, name)
-		if err != nil {
-			return err
-		}
+	} else if err != nil && err != errExist {
+		return err
 	}
 
 	outfp := filepath.Join(idir.fp, outfn)
 	return appendFile(outfp, []byte(out), 0600)
+}
+
+func handleMonitor(client *girc.Client, event girc.Event) {
+	targets := strings.Split(event.Trailing, ",")
+	for _, target := range targets {
+		source := girc.ParseSource(target)
+
+		// User might have already been removed elsewhere or
+		// added in writeEvent already. Thus we ignore the
+		// double removal / creation error.
+
+		var err, expErr error
+		switch event.Command {
+		case girc.RPL_MONOFFLINE:
+			err = removeListener(source.Name)
+			expErr = errNotExist
+		case girc.RPL_MONONLINE:
+			_, err = createListener(client, source.Name)
+			expErr = errExist
+		default:
+			panic("Unexpected command")
+		}
+
+		if err != nil && err != expErr {
+			log.Printf("Couldn't monitor %q: %s\n", target, err)
+		}
+	}
 }
 
 func handlePart(client *girc.Client, event girc.Event) {
@@ -600,11 +633,19 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		if flag.NArg() > 1 {
-			channels := flag.Args()[1:]
-			c.Cmd.Join(channels...)
+		for _, target := range flag.Args()[1:] {
+			if girc.IsValidChannel(target) {
+				c.Cmd.Join(target)
+			} else if girc.IsValidNick(target) {
+				c.Cmd.Monitor('+', target)
+			} else {
+				log.Println("Invalid target %q\n", target)
+			}
 		}
 	})
+
+	client.Handlers.Add(girc.RPL_MONOFFLINE, handleMonitor)
+	client.Handlers.Add(girc.RPL_MONONLINE, handleMonitor)
 
 	client.Handlers.Add(girc.PART, handlePart)
 	client.Handlers.Add(girc.KICK, handleKick)

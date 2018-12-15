@@ -16,7 +16,7 @@
 .Op Fl t
 .Op Fl d
 .Ar server
-.Op Ar channel ...
+.Op Ar target ...
 .Sh DESCRIPTION
 .Nm
 is a file-based IRC client.
@@ -36,10 +36,14 @@ On startup
 .Nm
 attempts to connect to the given
 .Ar server .
-If a connection was established successfully it automatically joins the
-given IRC
-.Ar channels
+If a connection was established successfully it automatically creates
+directories for the given
+.Ar targets
 (if any).
+Directories for users are only created automatically if the server
+supports the IRCv3.2
+.Em MONITOR
+command and the user is currently online.
 .Nm
 makes no attempt to reestablish the connection, it simply terminates
 when the connection to the IRC server is lost.
@@ -153,6 +157,14 @@ tail -f ~/irc/chat.freenode.net/out
 .%D April 2000
 .%R RFC 2812
 .%T Internet Relay Chat: Client Protocol
+.Re
+.Pp
+.Rs
+.%A L. Hardy
+.%A K. Aman
+.%A W. Pitcock
+.%U https://ircv3.net/specs/core/monitor-3.2.html
+.%T IRCv3.2 Monitor
 .Re
 .Sh AUTHORS
 .An Sören Tempel Aq Mt soeren@soeren-tempel.net
