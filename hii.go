@@ -84,7 +84,7 @@ var channelCmds = map[string]int{
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(),
-		"USAGE: %s [FLAGS] SERVER [CHANNEL...]\n\n"+
+		"USAGE: %s [FLAGS] SERVER [TARGET...]\n\n"+
 			"The following flags are supported:\n\n", os.Args[0])
 	flag.PrintDefaults()
 
@@ -633,9 +633,14 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 func addHandlers(client *girc.Client) {
 	client.Handlers.Add(girc.CONNECTED, func(c *girc.Client, e girc.Event) {
-		if flag.NArg() > 1 {
-			channels := flag.Args()[1:]
-			c.Cmd.Join(channels...)
+		for _, target := range flag.Args()[1:] {
+			if girc.IsValidChannel(target) {
+				c.Cmd.Join(target)
+			} else if girc.IsValidNick(target) {
+				c.Cmd.Monitor('+', target)
+			} else {
+				log.Println("Invalid target %q\n", target)
+			}
 		}
 	})
 
