@@ -170,8 +170,8 @@ func getTLSconfig() (*tls.Config, error) {
 func normalize(name string) string {
 	mfunc := func(r rune) rune {
 		switch {
-		case r == '.' || r == '#' || r == '&' ||
-			r == '+' || r == '!' || r == '-':
+		case r == '#' || r == '&' || r == '+' ||
+			r == '!' || r == '-':
 			return r
 		case r >= '0' && r <= '9':
 			return r
