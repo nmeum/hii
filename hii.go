@@ -266,7 +266,8 @@ func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 
 	for _, dir := range ircDirs {
 		if user.Nick == girc.ToRFC1459(dir.name) ||
-			(dir.ch != nil && user.InChannel(dir.name)) {
+			(dir.ch != nil && user.InChannel(dir.name)) ||
+			(dir.name != masterChan && user.Nick == client.GetID()) {
 			names = append(names, &dir.name)
 		}
 	}
