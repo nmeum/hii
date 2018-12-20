@@ -374,10 +374,7 @@ func removeListener(name string) error {
 	ch := dir.ch
 	if ch != nil && ch.ln != nil {
 		ch.done <- true
-		err := ch.ln.Close()
-		if err != nil {
-			return err
-		}
+		ch.ln.Close()
 	}
 
 	return nil
