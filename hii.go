@@ -232,8 +232,8 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 }
 
 func isMention(client *girc.Client, event *girc.Event) bool {
-	return event.IsFromUser() &&
-		event.Source.ID() != client.GetID() ||
+	return (event.IsFromUser() &&
+		event.Source.ID() != client.GetID()) ||
 		mntRegex.MatchString(event.Trailing)
 }
 
