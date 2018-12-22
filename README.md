@@ -52,7 +52,7 @@ feature set and shouldn't ["expand until it can read mail"][jwz's law].
 ### Compatibility with ii
 
 Backwards compatibility with ii wasn't a goal. While the directory
-structure is backwards compatible everything else is pretty much
+structure is mostly backwards compatible everything else is pretty much
 different. This is the case because proper backwards compatibility would
 have been a lot of work and I personally didn't need it.
 
