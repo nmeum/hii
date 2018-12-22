@@ -18,8 +18,11 @@ harmful ii or ii for humans (hii).
 
 Most of the features I intended to add to ii are already implemented.
 However, this is still work in progress and not yet entirely feature
-complete. Nonetheless, I started using this myself recently and believe
-that the most serious bugs have been fixed by now.
+complete.
+
+I started using this myself recently in conjunction with
+[insomnia][insomnia github] and a per-server [runit][runit homepage]
+[user service][runit user] for starting hii.
 
 ## Features
 
@@ -122,3 +125,6 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 [hackint certfp]: https://www.hackint.org/services#NickServ
 [jwz's law]: https://en.wikipedia.org/wiki/Zawinski's_law_of_software_envelopment#Principles
 [ircv3.2 monitor]: https://ircv3.net/specs/core/monitor-3.2.html
+[insomnia github]: https://github.com/nmeum/insomnia
+[runit homepage]: http://smarden.org/runit/
+[runit user]: http://smarden.org/runit/faq.html#userservices
