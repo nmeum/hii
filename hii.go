@@ -94,7 +94,8 @@ func usage() {
 	os.Exit(2)
 }
 
-func cleanup() {
+func cleanup(client *girc.Client) {
+	client.Close()
 	for _, dir := range ircDirs {
 		err := removeListener(dir.name)
 		if err != nil {
@@ -103,8 +104,8 @@ func cleanup() {
 	}
 }
 
-func die(err error) {
-	cleanup()
+func die(client *girc.Client, err error) {
+	cleanup(client)
 	log.Fatal(err)
 }
 
@@ -460,7 +461,7 @@ func serveNicks(client *girc.Client, name string, dir *ircDir) {
 	var err error
 	dir.ch.ln, err = net.Listen("unix", nickfp)
 	if err != nil {
-		die(err)
+		die(client, err)
 	}
 
 	for {
@@ -622,7 +623,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 	names, err := getEventDirs(client, &event)
 	if err != nil {
-		die(err)
+		die(client, err)
 	}
 
 	for _, name := range names {
@@ -718,12 +719,12 @@ func main() {
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 	go func() {
 		<-sig
-		cleanup()
+		cleanup(client)
 		os.Exit(1)
 	}()
 
 	err = client.Connect()
-	cleanup()
+	cleanup(client)
 	if err != nil {
 		log.Fatal(err)
 	}
