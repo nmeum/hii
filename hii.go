@@ -361,9 +361,10 @@ func removeListener(name string) error {
 
 	infp := filepath.Join(dir.fp, infn)
 
-	// hack to gracefully terminate the recvInput goroutine
+	// hack to gracefully terminate the recvInput goroutine.
+	// assertion: If infp exists recvInput must be running.
 	dir.done <- true
-	fifo, err := openFifo(infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
+	fifo, err := openFifo(infp, os.O_WRONLY, 0600)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -420,6 +421,9 @@ func handleInput(client *girc.Client, name, input string) error {
 }
 
 func recvInput(client *girc.Client, name string, dir *ircDir) {
+	// This goroutine must not terminate, otherwise the
+	// openFifo call in removeListener may cause a deadlock.
+
 	infp := filepath.Join(dir.fp, infn)
 	for {
 		fifo, err := openFifo(infp, os.O_CREATE|os.O_RDONLY, 0600)
