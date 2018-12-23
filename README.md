@@ -18,11 +18,9 @@ harmful ii or ii for humans (hii).
 
 Most of the features I intended to add to ii are already implemented.
 However, this is still work in progress and not yet entirely feature
-complete.
-
-I started using this myself recently in conjunction with
-[insomnia][insomnia github] and a per-server [runit][runit homepage]
-[user service][runit user] for starting hii.
+complete. Nonetheless, I started using this myself recently in
+conjunction with [insomnia][insomnia github] and a per-server
+[runit][runit homepage] [user service][runit user] for starting hii.
 
 ## Features
 
