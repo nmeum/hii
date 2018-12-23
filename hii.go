@@ -339,7 +339,6 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 			return nil, err
 		}
 	}
-	ircDirs[key] = idir
 
 	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
@@ -349,6 +348,7 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 		client.Cmd.Monitor('+', name)
 	}
 
+	ircDirs[key] = idir
 	return idir, nil
 }
 
