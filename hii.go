@@ -428,7 +428,8 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 			return
 		default:
 			if err != nil {
-				die(err)
+				log.Println(err)
+				continue
 			}
 
 			scanner := bufio.NewScanner(fifo)
