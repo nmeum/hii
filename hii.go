@@ -675,6 +675,9 @@ func newClient() (*girc.Client, error) {
 	client := girc.New(config)
 	addHandlers(client)
 
+	// Remove all CTCP handlers.
+	client.CTCP = &girc.CTCP{}
+
 	return client, nil
 }
 
