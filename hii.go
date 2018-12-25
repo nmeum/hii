@@ -94,7 +94,8 @@ func usage() {
 	os.Exit(2)
 }
 
-func cleanup() {
+func cleanup(client *girc.Client) {
+	client.Close()
 	for _, dir := range ircDirs {
 		err := removeListener(dir.name)
 		if err != nil {
@@ -103,8 +104,8 @@ func cleanup() {
 	}
 }
 
-func die(err error) {
-	cleanup()
+func die(client *girc.Client, err error) {
+	cleanup(client)
 	log.Fatal(err)
 }
 
@@ -361,9 +362,10 @@ func removeListener(name string) error {
 
 	infp := filepath.Join(dir.fp, infn)
 
-	// hack to gracefully terminate the recvInput goroutine
+	// hack to gracefully terminate the recvInput goroutine.
+	// assertion: If infp exists recvInput must be running.
 	dir.done <- true
-	fifo, err := openFifo(infp, os.O_WRONLY|syscall.O_NONBLOCK, 0600)
+	fifo, err := openFifo(infp, os.O_WRONLY, 0600)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -374,10 +376,7 @@ func removeListener(name string) error {
 	ch := dir.ch
 	if ch != nil && ch.ln != nil {
 		ch.done <- true
-		err := ch.ln.Close()
-		if err != nil {
-			return err
-		}
+		ch.ln.Close()
 	}
 
 	return nil
@@ -423,6 +422,9 @@ func handleInput(client *girc.Client, name, input string) error {
 }
 
 func recvInput(client *girc.Client, name string, dir *ircDir) {
+	// This goroutine must not terminate, otherwise the
+	// openFifo call in removeListener may cause a deadlock.
+
 	infp := filepath.Join(dir.fp, infn)
 	for {
 		fifo, err := openFifo(infp, os.O_CREATE|os.O_RDONLY, 0600)
@@ -431,7 +433,10 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 			return
 		default:
 			if err != nil {
-				die(err)
+				if err != syscall.EINTR {
+					log.Println(err)
+				}
+				continue
 			}
 
 			scanner := bufio.NewScanner(fifo)
@@ -458,7 +463,7 @@ func serveNicks(client *girc.Client, name string, dir *ircDir) {
 	var err error
 	dir.ch.ln, err = net.Listen("unix", nickfp)
 	if err != nil {
-		die(err)
+		die(client, err)
 	}
 
 	for {
@@ -620,7 +625,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 
 	names, err := getEventDirs(client, &event)
 	if err != nil {
-		die(err)
+		die(client, err)
 	}
 
 	for _, name := range names {
@@ -716,12 +721,12 @@ func main() {
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 	go func() {
 		<-sig
-		cleanup()
+		cleanup(client)
 		os.Exit(1)
 	}()
 
 	err = client.Connect()
-	cleanup()
+	cleanup(client)
 	if err != nil {
 		log.Fatal(err)
 	}
