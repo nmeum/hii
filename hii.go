@@ -193,29 +193,6 @@ func normalize(name string) string {
 	return strings.Map(mfunc, name)
 }
 
-// Like os.OpenFile but for FIFOs.
-func openFifo(name string, flag int, perm os.FileMode) (*os.File, error) {
-	fi, err := os.Lstat(name)
-	if flag&os.O_CREATE != 0 && os.IsNotExist(err) {
-		err = syscall.Mkfifo(name, syscall.S_IFIFO|uint32(perm))
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	} else if fi.Mode()&os.ModeNamedPipe == 0 {
-		return nil, fmt.Errorf("%q is not a named pipe", name)
-	}
-
-	flag &^= os.O_CREATE // remove os.O_CREATE flag used above
-	fifo, err := os.OpenFile(name, flag, perm)
-	if err != nil {
-		return nil, err
-	}
-
-	return fifo, err
-}
-
 // Like ioutil.Write but doesn't truncate and appends instead.
 func appendFile(filename string, data []byte, perm os.FileMode) error {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
@@ -342,10 +319,17 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 		return nil, err
 	}
 
+	infp := filepath.Join(dir, infn)
+	err = syscall.Mkfifo(infp, syscall.S_IFIFO|0600)
+	if err != nil {
+		return nil, err
+	}
+
 	idir := &ircDir{name, make(chan bool, 1), dir, nil}
 	if name != masterChan {
 		err = storeName(idir)
 		if err != nil {
+			os.Remove(infp)
 			return nil, err
 		}
 	}
@@ -375,7 +359,7 @@ func removeListener(name string) error {
 	// hack to gracefully terminate the recvInput goroutine.
 	// assertion: If infp exists recvInput must be running.
 	dir.done <- true
-	fifo, err := openFifo(infp, os.O_WRONLY, 0600)
+	fifo, err := os.OpenFile(infp, os.O_WRONLY, 0600)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -433,11 +417,11 @@ func handleInput(client *girc.Client, name, input string) error {
 
 func recvInput(client *girc.Client, name string, dir *ircDir) {
 	// This goroutine must not terminate, otherwise the
-	// openFifo call in removeListener may cause a deadlock.
+	// OpenFile() call in removeListener may cause a deadlock.
 
 	infp := filepath.Join(dir.fp, infn)
 	for {
-		fifo, err := openFifo(infp, os.O_CREATE|os.O_RDONLY, 0600)
+		fifo, err := os.Open(infp)
 		select {
 		case <-dir.done:
 			return
