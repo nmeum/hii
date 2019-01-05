@@ -323,6 +323,16 @@ func storeName(dir *ircDir) error {
 		return err
 	}
 
+	dirf, err := os.Open(dir.fp)
+	if err != nil {
+		return err
+	}
+	defer dirf.Close()
+	err = dirf.Sync()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
