@@ -1,4 +1,5 @@
 NAME = hii
+VERSION ?= unknown
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -19,4 +20,11 @@ install: $(NAME) $(NAME).1 README.md
 	install -Dm644 $(NAME).1 "$(DESTDIR)$(MANDIR)/man1/$(NAME).1"
 	install -Dm644 README.md "$(DESTDIR)$(DOCDIR)/README.md"
 
-.PHONY: install $(NAME)
+dist:
+	mkdir -p $(NAME)-$(VERSION)
+	cp -R hii.go hii.1 README.md LICENSE.md vendor $(NAME)-$(VERSION)
+	find $(NAME)-$(VERSION) -name '.git' -exec rm -rf {} +
+	tar -czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
+	rm -rf $(NAME)-$(VERSION)
+
+.PHONY: install dist $(NAME)
