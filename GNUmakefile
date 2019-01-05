@@ -5,7 +5,7 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 
-IMPORTPATH=src/github.com/nmeum/$(NAME)
+IMPORTPATH = src/github.com/nmeum/$(NAME)
 export GOPATH=$(CURDIR)
 
 $(NAME): $(IMPORTPATH)
