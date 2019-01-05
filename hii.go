@@ -317,7 +317,13 @@ func storeName(dir *ircDir) error {
 		return err
 	}
 
-	return os.Rename(tmpf.Name(), filepath.Join(dir.fp, idfn))
+	err = os.Rename(tmpf.Name(), filepath.Join(dir.fp, idfn))
+	if err != nil {
+		os.Remove(tmpf.Name())
+		return err
+	}
+
+	return nil
 }
 
 func createListener(client *girc.Client, name string) (*ircDir, error) {
