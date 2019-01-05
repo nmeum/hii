@@ -211,7 +211,7 @@ func appendFile(filename string, data []byte, perm os.FileMode) error {
 
 func isMention(client *girc.Client, event *girc.Event) bool {
 	return event.Source.ID() != client.GetID() &&
-		(event.IsFromUser() || mntRegex.MatchString(event.Trailing))
+		(event.IsFromUser() || mntRegex.MatchString(event.Last()))
 }
 
 func getCmdChan(event *girc.Event) (string, bool) {
@@ -405,13 +405,7 @@ func handleInput(client *girc.Client, name, input string) error {
 	case girc.PRIVMSG:
 		client.RunHandlers(event)
 	case girc.JOIN:
-		var ch string
-		if len(event.Params) > 0 {
-			ch = event.Params[0]
-		} else if len(event.Trailing) > 0 {
-			ch = event.Trailing
-		}
-
+		ch := event.Params[0]
 		if ch != "" {
 			idir, ok := ircDirs[normalize(ch)]
 			if ok && idir.name != ch {
@@ -538,7 +532,7 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 }
 
 func handleMonitor(client *girc.Client, event girc.Event) {
-	targets := strings.Split(event.Trailing, ",")
+	targets := strings.Split(event.Last(), ",")
 	for _, target := range targets {
 		source := girc.ParseSource(target)
 
