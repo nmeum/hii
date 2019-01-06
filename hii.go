@@ -300,6 +300,10 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 }
 
 func storeName(dir *ircDir) error {
+	// We don't call fsync(3) on the created file which may result
+	// in a zero-length file on crash. But since we recreated it on
+	// every run this is not an issue and a small performance win.
+
 	tmpf, err := ioutil.TempFile(dir.fp, ".tmp"+idfn)
 	if err != nil {
 		return err
