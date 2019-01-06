@@ -104,11 +104,6 @@ func cleanup(client *girc.Client) {
 	}
 }
 
-func die(client *girc.Client, err error) {
-	cleanup(client)
-	log.Fatal(err)
-}
-
 func parseFlags() {
 	user, err := user.Current()
 	if err != nil {
@@ -228,17 +223,17 @@ func getCmdChan(event *girc.Event) (string, bool) {
 	return "", false
 }
 
-func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
+func getSourceDirs(client *girc.Client, event *girc.Event) []*string {
 	var names []*string
 	if event.Source == nil {
-		return names, nil
+		return names
 	}
 
+	// user might theoretically be nil but shouldn't be as we only
+	// call this function through getEventDirs() for existing users.
 	user := client.LookupUser(event.Source.Name)
 	if user == nil && client.GetID() == event.Source.ID() {
-		return names, nil // User didn't join any channels yet
-	} else if user == nil {
-		return names, fmt.Errorf("user %q doesn't exist", event.Source.Name)
+		return names // User didn't join any channels yet
 	}
 
 	for _, dir := range ircDirs {
@@ -249,10 +244,10 @@ func getSourceDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 		}
 	}
 
-	return names, nil
+	return names
 }
 
-func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
+func getEventDirs(client *girc.Client, event *girc.Event) []*string {
 	name := masterChan
 	if event.IsFromChannel() {
 		name = event.Params[0]
@@ -273,7 +268,7 @@ func getEventDirs(client *girc.Client, event *girc.Event) ([]*string, error) {
 		}
 	}
 
-	return []*string{&name}, nil
+	return []*string{&name}
 }
 
 func storeName(dir *ircDir) error {
@@ -617,11 +612,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 		}
 	}
 
-	names, err := getEventDirs(client, &event)
-	if err != nil {
-		die(client, err)
-	}
-
+	names := getEventDirs(client, &event)
 	for _, name := range names {
 		err := writeEvent(client, &event, *name)
 		if err != nil {
