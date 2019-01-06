@@ -337,6 +337,14 @@ func createListener(client *girc.Client, name string) (*ircDir, error) {
 	go recvInput(client, name, idir)
 	if girc.IsValidChannel(name) {
 		idir.ch = &ircChan{make(chan bool, 1), nil}
+
+		nickfp := filepath.Join(dir, nickfn)
+		idir.ch.ln, err = net.Listen("unix", nickfp)
+		if err != nil {
+			os.Remove(infp)
+			return nil, err
+		}
+
 		go serveNicks(client, name, idir)
 	} else if girc.IsValidNick(name) {
 		client.Cmd.Monitor('+', name)
@@ -368,7 +376,7 @@ func removeListener(name string) error {
 	fifo.Close()
 
 	ch := dir.ch
-	if ch != nil && ch.ln != nil {
+	if ch != nil {
 		ch.done <- true
 		ch.ln.Close()
 	}
@@ -452,14 +460,6 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 }
 
 func serveNicks(client *girc.Client, name string, dir *ircDir) {
-	nickfp := filepath.Join(dir.fp, nickfn)
-
-	var err error
-	dir.ch.ln, err = net.Listen("unix", nickfp)
-	if err != nil {
-		die(client, err)
-	}
-
 	for {
 		conn, err := dir.ch.ln.Accept()
 		select {
