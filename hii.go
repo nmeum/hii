@@ -429,7 +429,8 @@ func recvInput(client *girc.Client, name string, dir *ircDir) {
 			return
 		default:
 			if err != nil {
-				if err != syscall.EINTR {
+				errno, ok := err.(syscall.Errno)
+				if !(ok && errno == syscall.EINTR) {
 					log.Println(err)
 				}
 				continue
