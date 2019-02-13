@@ -93,6 +93,10 @@ Defaults to 6667.
 Enables TLS, which is disabled by default.
 .It Fl d
 Write debug messages to standard output.
+Contrary to text in the
+.Pa out
+file the debug output is not sanitized and might contain ANSI escape
+sequences or other non-printable characters.
 .El
 .Sh FILES
 .Bl -tag -width "usr"
