@@ -507,7 +507,7 @@ func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 	}
 
 	out = strings.Map(filter, girc.StripRaw(out))
-	out = fmt.Sprintf("%v %s\n", event.Timestamp.Unix(), out)
+	out = fmt.Sprintf("%v %s", event.Timestamp.Unix(), out)
 
 	return out, true
 }
@@ -518,7 +518,7 @@ func writeMention(event *girc.Event) error {
 		return nil
 	}
 
-	_, err := logFile.WriteString(out)
+	_, err := logFile.WriteString(out + "\n")
 	if err != nil {
 		return err
 	}
@@ -532,6 +532,15 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 		return nil
 	}
 
+	var suffix string
+	if event.Command == girc.PRIVMSG {
+		if isMention(client, event) {
+			suffix = "\x07" // BEL character
+		} else if event.Source.ID() == client.GetID() {
+			suffix = "\x06" // ACK character
+		}
+	}
+
 	idir, err := createListener(client, name)
 	if err == errExist && idir.name != name {
 		return fmt.Errorf("name clash (%q vs. %q)", idir.name, name)
@@ -540,7 +549,7 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 	}
 
 	outfp := filepath.Join(idir.fp, outfn)
-	return appendFile(outfp, []byte(out), 0600)
+	return appendFile(outfp, []byte(out+suffix+"\n"), 0600)
 }
 
 func handleMonitor(client *girc.Client, event girc.Event) {
