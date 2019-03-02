@@ -506,7 +506,9 @@ func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 		}
 	}
 
-	out = fmt.Sprintf("%v %s\n", event.Timestamp.Unix(), strings.Map(filter, out))
+	out = strings.Map(filter, girc.StripRaw(out))
+	out = fmt.Sprintf("%v %s\n", event.Timestamp.Unix(), out)
+
 	return out, true
 }
 
