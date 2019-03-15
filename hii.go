@@ -640,7 +640,7 @@ func handleMsg(client *girc.Client, event girc.Event) {
 	for _, name := range names {
 		err := writeEvent(client, &event, *name)
 		if err != nil {
-			log.Println(err)
+			die(client, fmt.Errorf("%s: %v", filepath.Join(server, *name), err))
 		}
 	}
 }
