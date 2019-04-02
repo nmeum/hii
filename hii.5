@@ -1,0 +1,72 @@
+.Dd $Mdocdate: March 15 2019 $
+.Dt HII 5
+.Os
+.Sh NAME
+.Nm hii
+.Nd Output file format of the hii IRC client
+.Sh DESCRIPTION
+The
+.Pa out
+files created by
+.Xr hii 1
+consist of newline separated records for IRC events, record fields are
+separated by an ASCII space character.
+The first field is a timestamp from Unix epoch at which the event was
+received.
+All other fields are essentially user controlled and differ for
+different kinds of IRC events.
+.Pp
+ASCII format codes as well as non-printable characters are removed from
+all IRC events.
+However,
+.Nm
+itself adds non-printable characters suffixes as the last character of a
+record to identify special classes of IRC events.
+The following ASCII suffixes are currently supported:
+.Bl -tag -width acknowledge-(0x06) -offset 2m
+.It acknowledge (0x06)
+The event is a
+.Em PRIVMSG
+send by the own client.
+.It bell (0x07)
+The event is a
+.Em PRIVMSG
+either containing the user's nick or a send directly to the user.
+.El
+.Pp
+The
+.Pa log
+file created by
+.Nm
+uses a similar format.
+In contrast to
+.Pa out
+files each record represents a
+.Em PRIVMSG
+and contains at least three field: A timestamp (see above), a channel
+where the event originated (enclosed in square brackets) and an event
+source (enclosed in parentheses).
+Additionally, the
+.Pa log
+file format does not use any special suffixes.
+.Sh EXAMPLES
+An example
+.Pa out
+file might looks as follows:
+.Bd -offset 2m -literal
+1553375834 [*] bob (user.example.org) has joined #hii
+1553375834 [*] topic for #hii is: hii - harmful ii - https://github.com/nmeum/hii
+1553375873 (bob) hi!
+1553354847 *** alice has kicked bob: important kick message
+.Ed
+.Pp
+An example
+.Pa log
+file might look as follows:
+.Bd -offset 2m -literal
+1552167885 [#hii] (alice) bob: hi, how are you doing?
+1552168459 [#hii] (alice) did anybody hear anything from bob recently?
+1552317088 [bob] (carol) hi!
+.Ed
+.Sh SEE ALSO
+.Xr hii 1
