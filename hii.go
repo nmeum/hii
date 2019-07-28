@@ -673,12 +673,13 @@ func newClient() (*girc.Client, error) {
 	}
 
 	config := girc.Config{
-		Server:    server,
-		Port:      port,
-		Nick:      nick,
-		User:      name,
-		SSL:       useTLS,
-		TLSConfig: tlsconf,
+		Server:     server,
+		Port:       port,
+		Nick:       nick,
+		User:       name,
+		SSL:        useTLS,
+		TLSConfig:  tlsconf,
+		DisableSTS: true,
 	}
 
 	client := girc.New(config)
