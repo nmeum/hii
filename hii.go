@@ -485,7 +485,7 @@ func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 		return "", false
 	}
 
-	if strip {
+	if strip && len(event.Params) >= 1 { // KICK, MODE, TOPIC, PRIVMSG, …
 		// Strip the user/channel name from the output string
 		// since this information is already encoded in the path.
 		prefix := fmt.Sprintf("[%s] ", event.Params[0])
