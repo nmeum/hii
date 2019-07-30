@@ -398,7 +398,7 @@ func handleInput(client *girc.Client, name, input string) error {
 	input = input[1:]
 	event := girc.ParseEvent(fmt.Sprintf(":%s %s", client.GetNick(), input))
 	if event == nil {
-		return nil
+		return fmt.Errorf("couldn't parse input %q", input)
 	}
 
 	switch event.Command {
