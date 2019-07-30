@@ -409,7 +409,7 @@ func handleInput(client *girc.Client, name, input string) error {
 		if ch != "" {
 			idir, ok := ircDirs[normalize(ch)]
 			if ok && idir.name != ch {
-				return fmt.Errorf("cannot join %q: name clash", ch)
+				return fmt.Errorf("can't join %q: name clash", ch)
 			}
 		}
 	}
