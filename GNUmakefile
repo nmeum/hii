@@ -1,5 +1,4 @@
 NAME = hii
-VERSION ?= unknown
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -21,6 +20,7 @@ install: $(NAME) $(NAME).1 README.md
 	install -Dm644 $(NAME).5 "$(DESTDIR)$(MANDIR)/man5/$(NAME).5"
 	install -Dm644 README.md "$(DESTDIR)$(DOCDIR)/README.md"
 
+dist: VERSION = $(shell git describe --tags)
 dist:
 	mkdir -p $(NAME)-$(VERSION)
 	cp -R hii.go hii.1 hii.5 README.md LICENSE.md vendor $(NAME)-$(VERSION)
