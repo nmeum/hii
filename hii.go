@@ -492,7 +492,6 @@ func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 		out = strings.TrimPrefix(out, prefix)
 	}
 
-	// Filter non-printable chars to disable any kind of escape sequences.
 	filter := func(r rune) rune {
 		if unicode.IsPrint(r) {
 			return r
@@ -501,6 +500,7 @@ func fmtEvent(event *girc.Event, strip bool) (string, bool) {
 		}
 	}
 
+	// Filter escape sequences and non-printable characters (e.g. \a, …).
 	out = strings.Map(filter, girc.StripRaw(out))
 	out = fmt.Sprintf("%v %s", event.Timestamp.Unix(), out)
 
