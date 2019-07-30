@@ -95,7 +95,10 @@ func usage() {
 }
 
 func cleanup(client *girc.Client) {
-	client.Close()
+	if handleInput(client, masterChan, "/QUIT") != nil {
+		client.Close()
+	}
+
 	for _, dir := range ircDirs {
 		err := removeListener(dir.name)
 		if err != nil {
