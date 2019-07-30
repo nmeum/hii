@@ -12,7 +12,7 @@ patching ii but ultimately decided for a rewrite.
 
 During the rewrite various features have been implemented which could
 have been moved to separate tools, such as TLS support, hence the name
-harmful ii or ii for humans (hii).
+harmful ii (hii).
 
 ## Status
 
