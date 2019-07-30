@@ -9,7 +9,7 @@ IMPORTPATH = src/github.com/nmeum/$(NAME)
 export GOPATH = $(CURDIR)
 
 $(NAME): $(IMPORTPATH)
-	cd $< && env PWD="$(CURDIR)/$(IMPORTPATH)" go build -o $@
+	cd $< && env PWD="$(CURDIR)/$<" go build -o $@
 $(IMPORTPATH): $(GOPATH)
 	mkdir -p $(shell dirname $@)
 	ln -fs $< $@
