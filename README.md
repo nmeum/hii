@@ -55,8 +55,8 @@ have been a lot of work and I personally didn't need it.
 ## Installation
 
 The program can be installed either using `go get` or `GNU make`. The
-latter automatically setups a `GOPATH` and thus doesn't require the go
-toolchain to be configured properly.
+latter automatically configures `GOPATH` and is the preferred way of
+installing this software when packaging it for a distribution.
 
 ### go get
 
@@ -66,8 +66,7 @@ To install to the program using `go get` run the following command:
 
 ### GNU make
 
-To install it using `GNU make`, which is the preferred way when
-packing this software for a distribution, run the following commands:
+To install to the program using `GNU make` run the following commands:
 
 	$ make
 	$ make install
