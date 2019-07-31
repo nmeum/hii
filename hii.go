@@ -99,7 +99,7 @@ func cleanup(client *girc.Client) {
 	for _, dir := range ircDirs {
 		err := removeListener(dir.name)
 		if err != nil {
-			log.Printf("Couldn't remove %q: %s\n", dir.name, err)
+			log.Printf("couldn't remove %q: %s\n", dir.name, err)
 		}
 	}
 }
@@ -132,16 +132,16 @@ func parseFlags() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
-		fmt.Fprintf(flag.CommandLine.Output(), "Missing server argument\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "missing server argument\n")
 		usage()
 	}
 	server = flag.Arg(0)
 
 	if (clientKey == "" && clientCert != "") || (clientKey != "" && clientCert == "") {
-		log.Fatal("For using certFP a certificate and key need to be provided")
+		log.Fatal("for certFP a certificate and key need to be provided")
 	}
 	if (clientKey != "" || clientCert != "" || certs != "") && !useTLS {
-		log.Fatal("Certificates given but TLS wasn't enabled")
+		log.Fatal("certificates given but TLS wasn't enabled")
 	}
 }
 
@@ -565,11 +565,11 @@ func handleMonitor(client *girc.Client, event girc.Event) {
 			_, err = createListener(client, source.Name)
 			expErr = errExist
 		default:
-			panic("Unexpected command")
+			panic("unexpected command")
 		}
 
 		if err != nil && err != expErr {
-			log.Printf("Couldn't monitor %q: %s\n", target, err)
+			log.Printf("couldn't monitor %q: %s\n", target, err)
 		}
 	}
 }
@@ -583,7 +583,7 @@ func handlePart(client *girc.Client, event girc.Event) {
 	if event.Source.ID() == client.GetID() {
 		err := removeListener(name)
 		if err != nil {
-			log.Printf("Couldn't remove %q after part: %s\n", name, err)
+			log.Printf("couldn't remove %q after part: %s\n", name, err)
 		}
 	}
 }
@@ -597,7 +597,7 @@ func handleKick(client *girc.Client, event girc.Event) {
 
 	err := removeListener(name)
 	if err != nil {
-		log.Printf("Couldn't remove %q after kick: %s\n", name, err)
+		log.Printf("couldn't remove %q after kick: %s\n", name, err)
 	}
 }
 
@@ -648,7 +648,7 @@ func addHandlers(client *girc.Client) {
 			} else if girc.IsValidNick(target) {
 				c.Cmd.Monitor('+', target)
 			} else {
-				log.Println("Invalid target %q\n", target)
+				log.Println("invalid target %q\n", target)
 			}
 		}
 	})
