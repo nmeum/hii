@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"syscall"
 	"unicode"
 
@@ -82,6 +83,8 @@ var channelCmds = map[string]int{
 	girc.RPL_TOPIC: 1,
 }
 
+var disconnect sync.Once
+
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(),
 		"USAGE: %s [FLAGS] SERVER [TARGET...]\n\n"+
@@ -95,9 +98,11 @@ func usage() {
 }
 
 func cleanup(client *girc.Client) {
-	if handleInput(client, masterChan, "/QUIT") != nil {
-		client.Close()
-	}
+	disconnect.Do(func() {
+		if handleInput(client, masterChan, "/QUIT") != nil {
+			client.Close()
+		}
+	})
 
 	for _, dir := range ircDirs {
 		err := removeListener(dir.name)
