@@ -15,6 +15,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 	"unicode"
@@ -32,7 +33,10 @@ const (
 	idfn   = "id"
 )
 
-const masterChan = ""
+const (
+	masterChan = ""
+	maxIRClen  = 510 // -2 for line endings
+)
 
 type ircChan struct {
 	done chan bool
@@ -384,11 +388,44 @@ func removeListener(name string) error {
 	return nil
 }
 
+func maxHostLen(client *girc.Client) int {
+	var nicklen, hostlen int
+	var err error
+
+	nickval, success := client.GetServerOption("MAXNICKLEN")
+	if success {
+		nicklen, err = strconv.Atoi(nickval)
+	}
+	if !success || err != nil {
+		nicklen = 10 // common value according to irssi
+	}
+
+	hostval, success := client.GetServerOption("HOSTLEN")
+	if success {
+		hostlen, err = strconv.Atoi(hostval)
+	}
+	if !success || err != nil {
+		hostlen = 63 // common value according to irssi
+	}
+
+	// ":" <nick> "!" <host> " "
+	return 1 + nicklen + 1 + hostlen + 1
+}
+
 func handleInput(client *girc.Client, name, input string) error {
 	if input == "" {
 		return nil
 	} else if input[0] != '/' {
-		input = fmt.Sprintf("/%s %s :%s", girc.PRIVMSG, name, input)
+		cmd := girc.PRIVMSG
+
+		// TODO: what about message tags https://ircv3.net/specs/extensions/message-tags ?
+		maxlen := maxIRClen - maxHostLen(client) - len(cmd) + 1 - len(name)
+		for len(input) > maxlen {
+			handleInput(client, name, input[0:maxlen])
+			input = input[maxlen:]
+		}
+
+		input = fmt.Sprintf("/%s %s :%s", cmd, name, input)
 	}
 
 	if len(input) <= 1 {
