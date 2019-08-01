@@ -414,7 +414,8 @@ func handleInput(client *girc.Client, name, input string) error {
 		}
 	}
 
-	return client.Cmd.SendRaw(input + "\r\n")
+	client.Send(event)
+	return nil
 }
 
 func recvInput(client *girc.Client, name string, dir *ircDir) {
