@@ -402,7 +402,7 @@ func handleInput(client *girc.Client, name, input string) error {
 	}
 
 	switch event.Command {
-	case girc.PRIVMSG:
+	case girc.PRIVMSG, girc.NOTICE:
 		client.RunHandlers(event)
 	case girc.JOIN:
 		ch := event.Params[0]
