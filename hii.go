@@ -396,14 +396,16 @@ func handleInput(client *girc.Client, name, input string) error {
 	}
 
 	input = input[1:]
-	event := girc.ParseEvent(fmt.Sprintf(":%s %s", client.GetNick(), input))
+	event := girc.ParseEvent(input)
 	if event == nil {
 		return fmt.Errorf("couldn't parse input %q", input)
 	}
 
 	switch event.Command {
 	case girc.PRIVMSG, girc.NOTICE:
+		event.Source = &girc.Source{Name: client.GetNick()}
 		client.RunHandlers(event)
+		event.Source = nil
 	case girc.JOIN:
 		ch := event.Params[0]
 		if ch != "" {
