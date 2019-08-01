@@ -407,8 +407,8 @@ func handleInput(client *girc.Client, name, input string) error {
 		client.RunHandlers(event)
 		event.Source = nil
 	case girc.JOIN:
-		ch := event.Params[0]
-		if ch != "" {
+		if len(event.Params) >= 1 {
+			ch := event.Params[0]
 			idir, ok := ircDirs[normalize(ch)]
 			if ok && idir.name != ch {
 				return fmt.Errorf("can't join %q: name clash", ch)
