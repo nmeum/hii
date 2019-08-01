@@ -531,7 +531,7 @@ func writeEvent(client *girc.Client, event *girc.Event, name string) error {
 	}
 
 	var suffix string
-	if event.Command == girc.PRIVMSG {
+	if event.IsFromUser() || event.IsFromChannel() {
 		if isMention(client, event) {
 			suffix = "\x07" // BEL character
 		} else if event.Source.ID() == client.GetID() {
