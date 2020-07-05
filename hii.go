@@ -407,22 +407,23 @@ func handleInput(client *girc.Client, name, input string) error {
 		return fmt.Errorf("couldn't parse input %q", input)
 	}
 
-	switch event.Command {
-	case girc.PRIVMSG, girc.NOTICE:
-		event.Source = &girc.Source{Name: client.GetNick()}
-		client.RunHandlers(event)
-		event.Source = nil
-	case girc.JOIN:
-		if len(event.Params) >= 1 {
-			ch := event.Params[0]
-			idir, ok := ircDirs[normalize(ch)]
-			if ok && idir.name != ch {
-				return fmt.Errorf("can't join %q: name clash", ch)
-			}
+	if event.Command == girc.JOIN && len(event.Params) >= 1 {
+		ch := event.Params[0]
+		idir, ok := ircDirs[normalize(ch)]
+		if ok && idir.name != ch {
+			return fmt.Errorf("can't join %q: name clash", ch)
 		}
 	}
 
-	client.Send(event)
+	events := client.Send(event)
+	if event.Command == girc.PRIVMSG || event.Command == girc.NOTICE {
+		self := &girc.Source{Name: client.GetNick()}
+		for _, e := range events {
+			e.Source = self
+			client.RunHandlers(e)
+		}
+	}
+
 	return nil
 }
 
