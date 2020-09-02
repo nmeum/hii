@@ -651,7 +651,7 @@ func addHandlers(client *girc.Client) {
 			} else if girc.IsValidNick(target) {
 				c.Cmd.Monitor('+', target)
 			} else {
-				log.Println("invalid target %q\n", target)
+				log.Printf("invalid target %q\n", target)
 			}
 		}
 	})
