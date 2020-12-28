@@ -33,8 +33,6 @@ send by the own client.
 .It bell (0x07)
 The event is a
 .Em PRIVMSG
-or
-.Em NOTICE
 either containing the user's nick or a send directly to the user.
 .El
 .Pp
@@ -74,3 +72,7 @@ file might look as follows:
 .Ed
 .Sh SEE ALSO
 .Xr hii 1
+.Sh CAVEATS
+.Em NOTICE
+commands are not checked for mentions as they are mostly used by bots (e.g. NickServ).
+Highlighting requests for authentication et cetera is not deemed useful.
