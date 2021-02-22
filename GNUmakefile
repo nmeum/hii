@@ -5,14 +5,8 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 
-IMPORTPATH = src/github.com/nmeum/$(NAME)
-export GOPATH = $(CURDIR)
-
-$(NAME): $(IMPORTPATH)
-	cd $< && env PWD="$(CURDIR)/$<" go build -o $@
-$(IMPORTPATH): $(GOPATH)
-	mkdir -p $(shell dirname $@)
-	ln -fs $< $@
+$(NAME):
+	go build -trimpath -o $@
 
 install: $(NAME) $(NAME).1 README.md
 	install -Dm755 $(NAME) "$(DESTDIR)$(BINDIR)/$(NAME)"
