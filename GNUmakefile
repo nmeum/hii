@@ -17,7 +17,7 @@ install: $(NAME) $(NAME).1 README.md
 dist: VERSION = $(shell git describe --tags)
 dist:
 	mkdir -p $(NAME)-$(VERSION)
-	cp -R hii.go hii.1 hii.5 README.md LICENSE.md vendor $(NAME)-$(VERSION)
+	cp -R hii.go hii.1 hii.5 README.md LICENSE.md vendor GNUmakefile go.mod $(NAME)-$(VERSION)
 	find $(NAME)-$(VERSION) -name '.git' -exec rm -rf {} +
 	tar -czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
 	rm -rf $(NAME)-$(VERSION)
