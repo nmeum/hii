@@ -37,7 +37,7 @@ Features intentionally not implemented:
 
 * Automatic authorization using the [PASS command][password message] is
   not implemented (ii `-k` flag). Use authorization using TLS client
-  certificates (CertFP) instead. [Most][freenode certfp]
+  certificates (CertFP) instead. [Most][libera certfp]
   [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
 * Shortcut commands, e.g. `/j`. If you need them write yourself a shell
   script for mapping shortcut commands to real commands.
@@ -115,7 +115,7 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 [ii homepage]: https://tools.suckless.org/ii/
 [girc repo]: https://github.com/lrstanley/girc
 [password message]: https://tools.ietf.org/html/rfc1459#section-4.1.1
-[freenode certfp]: https://freenode.net/kb/answer/certfp
+[libera certfp]: https://libera.chat/guides/certfp
 [oftc certfp]: https://www.oftc.net/NickServ/CertFP/
 [hackint certfp]: https://www.hackint.org/services#NickServ
 [jwz's law]: https://en.wikipedia.org/wiki/Zawinski's_law_of_software_envelopment#Principles
