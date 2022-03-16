@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+	"time"
 	"unicode"
 
 	"github.com/lrstanley/girc"
@@ -166,6 +167,19 @@ func getTLSconfig() (*tls.Config, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Perform sanity check on x509 certificate of TLS client certificates.
+		// Unfourtunatly, cert.Leaf is discarded and thus the certificate needs
+		// to be parsed again <https://groups.google.com/g/golang-dev/c/VResvFj2vF8>.
+		x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+		if err != nil {
+			return nil, err
+		}
+		now := time.Now()
+		if now.Before(x509Cert.NotBefore) || now.After(x509Cert.NotAfter) {
+			log.Println("WARNING: Your client certificate has expired or is not valid yet")
+		}
+
 		config.Certificates = []tls.Certificate{cert}
 	}
 
