@@ -54,15 +54,15 @@ have been a lot of work and I personally didn't need it.
 
 ## Installation
 
-The program can be installed either using `go get` or `GNU make`. The
-latter automatically configures `GOPATH` and is the preferred way of
+The program can be installed either using `go install` or `GNU make`.
+The latter automatically configures `GOPATH` and is the preferred way of
 installing this software when packaging it for a distribution.
 
-### go get
+### go install
 
-To install to the program using `go get` run the following command:
+To install to the program using `go install` run the following command:
 
-	$ go get github.com/nmeum/hii
+	$ go install github.com/nmeum/hii@latest
 
 ### GNU make
 
@@ -70,6 +70,9 @@ To install to the program using `GNU make` run the following commands:
 
 	$ make
 	$ make install
+
+This will also install documentation files to the correct location and
+may thus be preferable when packaging this software for a distribution.
 
 ## FAQ
 
