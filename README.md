@@ -63,6 +63,7 @@ installing this software when packaging it for a distribution.
 To install to the program using `go install` run the following commands:
 
 	$ git clone https://github.com/nmeum/hii.git
+	$ cd hii
 	$ go install
 
 ### GNU make
@@ -70,6 +71,7 @@ To install to the program using `go install` run the following commands:
 To install to the program using `GNU make` run the following commands:
 
 	$ git clone https://github.com/nmeum/hii.git
+	$ cd hii
 	$ make && make install
 
 This will also install documentation files to the correct location and
