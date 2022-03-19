@@ -1,3 +1,0 @@
-[submodule "vendor/github.com/lrstanley/girc"]
-	path = vendor/github.com/lrstanley/girc
-	url = git://github.com/lrstanley/girc.git
