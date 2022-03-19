@@ -6,7 +6,7 @@ MANDIR ?= $(PREFIX)/share/man
 DOCDIR ?= $(PREFIX)/share/doc/$(NAME)
 
 $(NAME):
-	go build -trimpath -o $@
+	go build -o $@
 
 install: $(NAME) $(NAME).1 $(NAME).5 README.md
 	install -Dm755 $(NAME) "$(DESTDIR)$(BINDIR)/$(NAME)"
