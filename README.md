@@ -55,8 +55,6 @@ have been a lot of work and I personally didn't need it.
 ## Installation
 
 The program can be installed either using `go install` or `GNU make`.
-The latter automatically configures `GOPATH` and is the preferred way of
-installing this software when packaging it for a distribution.
 
 ### go install
 
