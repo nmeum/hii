@@ -59,6 +59,9 @@ var (
 	nick       string
 	port       int
 	useTLS     bool
+	useSASL    bool
+	saslUid    string
+	saslPwd    string
 	debug      bool
 )
 
@@ -128,6 +131,9 @@ func parseFlags() {
 	flag.IntVar(&port, "p", 6667, "TCP port")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 	flag.BoolVar(&debug, "d", false, "enable debug output")
+	flag.BoolVar(&useSASL, "s", false, "use SASL")
+	flag.StringVar(&saslUid, "u", "", "real name")
+	flag.StringVar(&saslPwd, "w", "", "real name")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -143,6 +149,9 @@ func parseFlags() {
 	}
 	if (clientKey != "" || clientCert != "" || certs != "") && !useTLS {
 		log.Fatal("certificates given but TLS wasn't enabled")
+	}
+	if (saslUid != "" || saslPwd != "" ) && !useSASL {
+		log.Fatal("SASL credentials given but SASL wasn't enabled")
 	}
 }
 
@@ -713,6 +722,10 @@ func newClient() (*girc.Client, error) {
 		SSL:        useTLS,
 		TLSConfig:  tlsconf,
 		DisableSTS: true,
+	}
+	
+	if useSASL {
+		config.SASL = &girc.SASLPlain{User: saslUid, Pass: saslPwd}
 	}
 
 	client := girc.New(config)
