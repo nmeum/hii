@@ -30,6 +30,7 @@ New features (compared to ii):
 * Support for [IRCv3.2 monitoring][ircv3.2 monitor]
 * Support for a per-channel nick list using a UNIX domain socket
 * Support for recording messages mentioning the users
+* Supporting SASL authentication
 * Built-in TLS support
 * Built-in IPv6 support
 
