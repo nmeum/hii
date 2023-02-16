@@ -132,8 +132,8 @@ func parseFlags() {
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 	flag.BoolVar(&debug, "d", false, "enable debug output")
 	flag.BoolVar(&useSASL, "s", false, "use SASL")
-	flag.StringVar(&saslUid, "u", "", "real name")
-	flag.StringVar(&saslPwd, "w", "", "real name")
+	flag.StringVar(&saslUid, "u", "", "SASL username")
+	flag.StringVar(&saslPwd, "w", "", "SASL password")
 
 	flag.Usage = usage
 	flag.Parse()
