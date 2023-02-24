@@ -55,7 +55,7 @@ have been a lot of work and I personally didn't need it.
 
 ## Installation
 
-The program can be installed either using `go install` or `GNU make`.
+The program can be installed either using `go install` or `make`.
 
 ### go install
 
@@ -65,9 +65,9 @@ To install to the program using `go install` run the following commands:
 	$ cd hii
 	$ go install
 
-### GNU make
+### make
 
-To install to the program using `GNU make` run the following commands:
+To install to the program using `make` run the following commands:
 
 	$ git clone https://github.com/nmeum/hii.git
 	$ cd hii
