@@ -59,6 +59,7 @@ var (
 	port       int
 	useTLS     bool
 	debug      bool
+	sasl       bool
 )
 
 var (
@@ -127,6 +128,7 @@ func parseFlags() {
 	flag.IntVar(&port, "p", 6667, "TCP port")
 	flag.BoolVar(&useTLS, "t", false, "use TLS")
 	flag.BoolVar(&debug, "d", false, "enable debug output")
+	flag.BoolVar(&sasl, "s", false, "attempt authentication using SASL EXTERNAL")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -142,6 +144,9 @@ func parseFlags() {
 	}
 	if (clientKey != "" || clientCert != "" || certs != "") && !useTLS {
 		log.Fatal("certificates given but TLS wasn't enabled")
+	}
+	if sasl && clientKey == "" {
+		log.Fatal("SASL external enabled but no client certificates were provided")
 	}
 }
 
@@ -712,6 +717,10 @@ func newClient() (*girc.Client, error) {
 		SSL:        useTLS,
 		TLSConfig:  tlsconf,
 		DisableSTS: true,
+	}
+
+	if sasl {
+		config.SASL = &girc.SASLExternal{}
 	}
 
 	client := girc.New(config)

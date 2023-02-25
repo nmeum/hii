@@ -15,6 +15,7 @@
 .Op Fl p Ar port
 .Op Fl t
 .Op Fl d
+.Op Fl s
 .Ar server
 .Op Ar target ...
 .Sh DESCRIPTION
@@ -97,6 +98,14 @@ Contrary to text in the
 .Pa out
 file the debug output is not sanitized and might contain ANSI escape
 sequences or other non-printable characters.
+.It Fl s
+Attempt SASL authentication using the SASL EXTERNAL method with TLS client certificates.
+This requires
+.Fl k ,
+.Fl c ,
+and
+.Fl t
+to be given as well.
 .El
 .Sh FILES
 .Bl -tag -width "usr"

@@ -30,8 +30,9 @@ New features (compared to ii):
 * Support for [IRCv3.2 monitoring][ircv3.2 monitor]
 * Support for a per-channel nick list using a UNIX domain socket
 * Support for recording messages mentioning the users
-* Support for authentication using TLS client certificates (CertFP).
-  [Most][libera certfp] [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
+* Support for authentication using TLS client certificates (CertFP)
+    * [Most][libera certfp] [IRC][oftc certfp] [networks][hackint certfp] support CertFP
+    * This can be used in conjunction with the [SASL EXTERNAL][sasl mechanisms] mechanism
 * Built-in TLS support
 * Built-in IPv6 support
 
@@ -127,3 +128,4 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 [insomnia github]: https://github.com/nmeum/insomnia
 [runit homepage]: http://smarden.org/runit/
 [runit user]: http://smarden.org/runit/faq.html#userservices
+[sasl mechanisms]: https://ircv3.net/docs/sasl-mechs
