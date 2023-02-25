@@ -717,6 +717,7 @@ func newClient() (*girc.Client, error) {
 		SSL:        useTLS,
 		TLSConfig:  tlsconf,
 		DisableSTS: true,
+		PingDelay:  1 * time.Minute,
 	}
 
 	if sasl {
