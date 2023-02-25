@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -149,7 +148,7 @@ func parseFlags() {
 func getTLSconfig() (*tls.Config, error) {
 	config := &tls.Config{ServerName: server}
 	if certs != "" {
-		data, err := ioutil.ReadFile(certs)
+		data, err := os.ReadFile(certs)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +206,7 @@ func normalize(name string) string {
 	return strings.Map(mfunc, name)
 }
 
-// Like ioutil.Write but doesn't truncate and appends instead.
+// Like os.WriteFile but doesn't truncate and appends instead.
 func appendFile(filename string, data []byte, perm os.FileMode) error {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
 	if err != nil {
@@ -307,7 +306,7 @@ func storeName(dir *ircDir) error {
 	// in a zero-length file on crash. But since we recreated it on
 	// every run this is not an issue and a small performance win.
 
-	tmpf, err := ioutil.TempFile(dir.fp, ".tmp"+idfn)
+	tmpf, err := os.CreateTemp(dir.fp, ".tmp"+idfn)
 	if err != nil {
 		return err
 	}
