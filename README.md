@@ -30,15 +30,15 @@ New features (compared to ii):
 * Support for [IRCv3.2 monitoring][ircv3.2 monitor]
 * Support for a per-channel nick list using a UNIX domain socket
 * Support for recording messages mentioning the users
+* Support for authentication using TLS client certificates (CertFP).
+  [Most][libera certfp] [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
 * Built-in TLS support
 * Built-in IPv6 support
 
 Features intentionally not implemented:
 
 * Automatic authorization using the [PASS command][password message] is
-  not implemented (ii `-k` flag). Use authorization using TLS client
-  certificates (CertFP) instead. [Most][libera certfp]
-  [IRC][oftc certfp] [networks][hackint certfp] support CertFP.
+  not implemented (ii `-k` flag).
 * Shortcut commands, e.g. `/j`. If you need them write yourself a shell
   script for mapping shortcut commands to real commands.
 
