@@ -65,6 +65,10 @@ To install to the program using `go install` run the following commands:
 	$ cd hii
 	$ go install
 
+Unfortunately, using `go install` directly is currently not possible
+since `replace` directives (used in hii to supply a custom girc version)
+are [not supported for `go install`][go replace].
+
 ### make
 
 To install to the program using `make` run the following commands:
@@ -129,3 +133,4 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 [runit homepage]: http://smarden.org/runit/
 [runit user]: http://smarden.org/runit/faq.html#userservices
 [sasl mechanisms]: https://ircv3.net/docs/sasl-mechs
+[go replace]: https://github.com/golang/go/issues/44840
