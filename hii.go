@@ -710,14 +710,15 @@ func newClient() (*girc.Client, error) {
 	}
 
 	config := girc.Config{
-		Server:     server,
-		Port:       port,
-		Nick:       nick,
-		User:       name,
-		SSL:        useTLS,
-		TLSConfig:  tlsconf,
-		DisableSTS: true,
-		PingDelay:  1 * time.Minute,
+		Server:      server,
+		Port:        port,
+		Nick:        nick,
+		User:        name,
+		SSL:         useTLS,
+		TLSConfig:   tlsconf,
+		DisableSTS:  true,
+		PingDelay:   1 * time.Minute,
+		PingTimeout: 3 * time.Minute,
 	}
 
 	if sasl {
