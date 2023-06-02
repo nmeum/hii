@@ -1,2 +1,2 @@
-github.com/nmeum/girc v0.0.0-20230226161237-84238f852921 h1:33BxQOX/Wh0awmavhf3q/tydyTah9zIuNQyH3GBTdBQ=
-github.com/nmeum/girc v0.0.0-20230226161237-84238f852921/go.mod h1:lgrnhcF8bg/Bd5HA5DOb4Z+uGqUqGnp4skr+J2GwVgI=
+github.com/lrstanley/girc v0.0.0-20230507010347-3c8fa7715074 h1:Uuzmwjx9dzTIfh9bdK9l5y9DQgpmgEFaifJGB5jHxb4=
+github.com/lrstanley/girc v0.0.0-20230507010347-3c8fa7715074/go.mod h1:lgrnhcF8bg/Bd5HA5DOb4Z+uGqUqGnp4skr+J2GwVgI=
