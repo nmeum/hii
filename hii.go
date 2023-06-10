@@ -433,9 +433,13 @@ func handleInput(client *girc.Client, name, input string) error {
 
 	switch event.Command {
 	case girc.PRIVMSG, girc.NOTICE:
-		event.Source = &girc.Source{Name: client.GetNick()}
-		client.RunHandlers(event)
-		event.Source = nil
+		// If the client doesn't support IRCv3 echo-message then
+		// we just emulate it by running handlers on the event.
+		if !client.HasCapability("echo-message") {
+			event.Source = &girc.Source{Name: client.GetNick()}
+			client.RunHandlers(event)
+			event.Source = nil
+		}
 	case girc.JOIN:
 		if len(event.Params) >= 1 {
 			ch := event.Params[0]
@@ -513,6 +517,7 @@ func serveNicks(client *girc.Client, name string, dir *ircDir) {
 }
 
 func fmtEvent(event *girc.Event, strip bool) (string, bool) {
+	event.Echo = false // .Pretty() does not format echos
 	out, ok := event.Pretty()
 	if !ok {
 		return "", false
@@ -719,6 +724,11 @@ func newClient() (*girc.Client, error) {
 		DisableSTS:  true,
 		PingDelay:   1 * time.Minute,
 		PingTimeout: 3 * time.Minute,
+
+		// Enable https://ircv3.net/specs/extensions/echo-message
+		SupportedCaps: map[string][]string{
+			"echo-message": nil,
+		},
 	}
 
 	if sasl {
