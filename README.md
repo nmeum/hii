@@ -17,7 +17,7 @@ harmful ii (hii).
 ## Status
 
 I currently consider hii feature complete and use it myself regularly in
-combination with with [insomnia][insomnia github] and a per-server
+combination with [insomnia][insomnia github] and a per-server
 [runit][runit homepage] [user service][runit user] for starting hii.
 
 ## Features
