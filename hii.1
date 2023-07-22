@@ -99,7 +99,8 @@ Contrary to text in the
 file the debug output is not sanitized and might contain ANSI escape
 sequences or other non-printable characters.
 .It Fl s
-Attempt SASL authentication using the SASL EXTERNAL method with TLS client certificates.
+Attempt SASL authentication using the SASL EXTERNAL method with TLS
+client certificates.
 This requires
 .Fl k ,
 .Fl c ,
@@ -129,8 +130,8 @@ removed on program termination.
 .It Pa usr
 A UNIX domain socket which reports the nicks of all users currently
 present in an IRC channel.
-Nicks are separated by a newline and written in alphabetic order to the
-socket.
+Nicks are separated by a newline and are written descending by last
+activity to the socket.
 The socket only exists in subdirectories associated with IRC channels
 and is closed on program termination.
 .It Pa log

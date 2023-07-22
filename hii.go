@@ -14,6 +14,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -501,8 +502,13 @@ func serveNicks(client *girc.Client, name string, dir *ircDir) {
 
 			ch := client.LookupChannel(name)
 			if ch != nil {
+				users := ch.Users(client)
+				sort.Slice(users, func(i, j int) bool {
+					return !users[i].LastActive.Before(users[j].LastActive)
+				})
+
 				var b bytes.Buffer
-				for _, user := range ch.Users(client) {
+				for _, user := range users {
 					b.WriteString(user.Nick + "\n")
 				}
 				_, err = conn.Write(b.Bytes())
