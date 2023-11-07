@@ -8,17 +8,16 @@ I originally only intended to write a frontend for ii instead of
 completely rewriting it from scratch. However, while working on the
 frontend I noticed that I couldn't implement certain features in the
 frontend without changes to the backend (ii). I briefly considered
-patching ii but ultimately decided for a rewrite.
-
-During the rewrite various features have been implemented which could
-have been moved to separate tools, such as TLS support, hence the name
-harmful ii (hii).
+patching ii but ultimately decided for a rewrite. During the rewrite,
+various features have been implemented that are not supported by ii
+(e.g. various IRCv3 features, builtin TLS and IPv6 support, et cetera).
 
 ## Status
 
-I currently consider hii feature complete and use it myself regularly in
+I currently consider hii feature complete and use it myself daily in
 combination with [insomnia][insomnia github] and a per-server
-[runit][runit homepage] [user service][runit user] for starting hii.
+[runit][runit homepage] [user service][runit user] for automatically
+starting and supervising hii processes.
 
 ## Features
 
