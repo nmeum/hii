@@ -55,6 +55,7 @@ have been a lot of work and I personally didn't need it.
 ## Installation
 
 The program can be installed either using `go install` or `make`.
+Additionaly, if you are on Arch Linux, it is available on the AUR.
 
 ### go install
 
@@ -74,6 +75,16 @@ To install to the program using `make` run the following commands:
 
 This will also install documentation files to the correct location and
 may thus be preferable when packaging this software for a distribution.
+
+### Arch Linux AUR
+
+To install the program from the AUR, run the following commands:
+
+	$ git clone https://aur.archlinux.org/hii.git
+	$ cd hii
+	$ makepkg -si
+
+You can also use your preferred AUR helper if you want to.
 
 ## FAQ
 
