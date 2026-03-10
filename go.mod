@@ -1,4 +1,4 @@
-module github.com/nmeum/hii
+module git.8pit.net/hii
 
 go 1.16
 

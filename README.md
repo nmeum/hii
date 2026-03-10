@@ -60,7 +60,7 @@ The program can be installed either using `go install` or `make`.
 
 To install to the program using `go install` run the following command:
 
-	$ go install github.com/nmeum/hii@latest
+	$ go install git.8pit.net/hii@latest
 
 Note that this will not install additional documentation files, e.g. man pages.
 
@@ -68,7 +68,7 @@ Note that this will not install additional documentation files, e.g. man pages.
 
 To install to the program using `make` run the following commands:
 
-	$ git clone https://github.com/nmeum/hii.git
+	$ git clone https://git.8pit.net/hii.git
 	$ cd hii
 	$ make && make install
 
