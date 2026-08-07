@@ -721,15 +721,17 @@ func newClient() (*girc.Client, error) {
 	}
 
 	config := girc.Config{
-		Server:      server,
-		Port:        port,
-		Nick:        nick,
-		User:        name,
-		SSL:         useTLS,
-		TLSConfig:   tlsconf,
-		DisableSTS:  true,
-		PingDelay:   1 * time.Minute,
-		PingTimeout: 3 * time.Minute,
+		Server:                server,
+		Port:                  port,
+		Nick:                  nick,
+		User:                  name,
+		SSL:                   useTLS,
+		TLSConfig:             tlsconf,
+		DisableSTS:            true,
+		DisableAutoMODEOnJoin: true,
+		DisableAutoWHOOnJoin:  true,
+		PingDelay:             1 * time.Minute,
+		PingTimeout:           3 * time.Minute,
 
 		// Enable https://ircv3.net/specs/extensions/echo-message
 		SupportedCaps: map[string][]string{
